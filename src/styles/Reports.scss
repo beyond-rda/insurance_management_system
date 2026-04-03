@@ -1,0 +1,44 @@
+.reports {
+    padding: 10px;
+}
+
+.reports__title {
+    font-size: 24px;
+    font-weight: bold;
+    margin-bottom: 24px;
+    color: var(--text-color);
+}
+
+.reports__grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 24px;
+}
+
+.report__card {
+    background-color: white;
+    border-radius: 12px;
+    padding: 24px;
+    flex: 1;
+    min-width: 300px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.report__card h3 {
+    font-size: 16px;
+    font-weight: bold;
+    margin-bottom: 16px;
+    color: #333;
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+
+    .reports__grid {
+        flex-direction: column;
+    }
+
+    .report__card {
+        min-width: unset;
+    }
+}

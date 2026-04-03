@@ -1,0 +1,75 @@
+.claims {
+    padding: 10px;
+}
+
+.claims__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+}
+
+.claims__title {
+    font-size: 24px;
+    font-weight: bold;
+    color: var(--text-color);
+}
+
+/* Approve and Reject buttons */
+.btn-approve {
+    background-color: #2e7d32;
+    color: white;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 13px;
+    margin-right: 6px;
+
+    &:hover {
+        background-color: #1b5e20;
+    }
+}
+
+.btn-reject {
+    background-color: #ef5350;
+    color: white;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 13px;
+    margin-right: 6px;
+
+    &:hover {
+        background-color: #c62828;
+    }
+}
+
+.badge--approved {
+    background-color: #e8f5e9;
+    color: #2e7d32;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.badge--rejected {
+    background-color: #ffebee;
+    color: #c62828;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+
+    .claims__header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+    }
+}

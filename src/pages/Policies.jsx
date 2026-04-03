@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { DataGrid } from "@mui/x-data-grid";
 import "../styles/Policies.scss";
 
 // Sample policies data
@@ -7,6 +8,8 @@ const initialPolicies = [
     { id: 2, name: "Motor Cover", type: "Motor", premium: "$150", duration: "1 Year", status: "Active", description: "Covers vehicle accidents.", file: null },
     { id: 3, name: "Property Shield", type: "Property", premium: "$300", duration: "2 Years", status: "Inactive", description: "Covers property damage.", file: null },
     { id: 4, name: "Life Assurance", type: "Life", premium: "$250", duration: "5 Years", status: "Pending", description: "Life insurance cover.", file: null },
+    { id: 5, name: "Health Premium", type: "Health", premium: "$400", duration: "1 Year", status: "Active", description: "Premium health coverage.", file: null },
+    { id: 6, name: "Motor Third Party", type: "Motor", premium: "$100", duration: "1 Year", status: "Pending", description: "Third party motor cover.", file: null },
 ];
 
 function Policies() {
@@ -14,14 +17,11 @@ function Policies() {
     // List of policies
     const [policies, setPolicies] = useState(initialPolicies);
 
-    // Controls which popup is open: null, "add", "view", "delete"
+    // Controls which popup is open
     const [popup, setPopup] = useState(null);
 
-    // The policy currently selected
+    // Currently selected policy
     const [selected, setSelected] = useState(null);
-
-    // Search text
-    const [search, setSearch] = useState("");
 
     // New policy form values
     const [form, setForm] = useState({
@@ -30,6 +30,9 @@ function Policies() {
 
     // Image preview
     const [preview, setPreview] = useState(null);
+
+    // Form errors
+    const [errors, setErrors] = useState({});
 
     // Open view popup
     const openView = (policy) => {
@@ -43,7 +46,7 @@ function Policies() {
         setPopup("delete");
     };
 
-    // Delete the selected policy
+    // Delete selected policy
     const deletePolicy = () => {
         setPolicies(policies.filter((p) => p.id !== selected.id));
         setPopup(null);
@@ -54,20 +57,46 @@ function Policies() {
         setForm({ ...form, [e.target.name]: e.target.value });
     };
 
-    // Handle file upload
+    // Handle file upload with type and size validation
     const handleFile = (e) => {
         const file = e.target.files[0];
+
+        // File type validation — only images and PDFs allowed
+        const allowedTypes = ["image/jpeg", "image/png", "application/pdf"];
+        if (!allowedTypes.includes(file.type)) {
+            alert("Only JPG, PNG or PDF files are allowed!");
+            return;
+        }
+
+        // File size validation — max 2MB
+        const maxSize = 2 * 1024 * 1024; // 2MB in bytes
+        if (file.size > maxSize) {
+            alert("File size must be less than 2MB!");
+            return;
+        }
+
         setForm({ ...form, file });
-        setPreview(URL.createObjectURL(file));
+        // Only show preview for images
+        if (file.type.startsWith("image/")) {
+            setPreview(URL.createObjectURL(file));
+        } else {
+            setPreview(null);
+        }
+    };
+
+    // Validate form
+    const validate = () => {
+        let newErrors = {};
+        if (!form.name) newErrors.name = "Policy name is required";
+        if (!form.premium) newErrors.premium = "Premium is required";
+        if (!form.duration) newErrors.duration = "Duration is required";
+        setErrors(newErrors);
+        return Object.keys(newErrors).length === 0;
     };
 
     // Save new policy
     const savePolicy = () => {
-        // Validation
-        if (!form.name || !form.premium || !form.duration) {
-            alert("Please fill all required fields!");
-            return;
-        }
+        if (!validate()) return;
         const newPolicy = {
             id: policies.length + 1,
             ...form,
@@ -77,12 +106,45 @@ function Policies() {
         setPopup(null);
         setForm({ name: "", type: "Health", premium: "", duration: "", status: "Active", description: "", file: null });
         setPreview(null);
+        setErrors({});
     };
 
-    // Filter policies by search
-    const filtered = policies.filter((p) =>
-        p.name.toLowerCase().includes(search.toLowerCase())
-    );
+    // DataGrid columns definition
+    const columns = [
+        { field: "id", headerName: "#", width: 60 },
+        { field: "name", headerName: "Policy Name", width: 180 },
+        { field: "type", headerName: "Type", width: 120 },
+        { field: "premium", headerName: "Premium", width: 120 },
+        { field: "duration", headerName: "Duration", width: 120 },
+        {
+            field: "status",
+            headerName: "Status",
+            width: 120,
+            // Render colored badge for status
+            renderCell: (params) => (
+                <span className={`badge badge--${params.value.toLowerCase()}`}>
+                    {params.value}
+                </span>
+            ),
+        },
+        {
+            field: "actions",
+            headerName: "Actions",
+            width: 200,
+            sortable: false,
+            // Render action buttons
+            renderCell: (params) => (
+                <>
+                    <button className="btn-view" onClick={() => openView(params.row)}>
+                        👁 View
+                    </button>
+                    <button className="btn-delete" onClick={() => openDelete(params.row)}>
+                        🗑 Delete
+                    </button>
+                </>
+            ),
+        },
+    ];
 
     return (
         <div className="policies">
@@ -95,54 +157,15 @@ function Policies() {
                 </button>
             </div>
 
-            {/* Search bar */}
-            <input
-                className="search__bar"
-                type="text"
-                placeholder="🔍 Search policies..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-            />
-
-            {/* Policies Table */}
-            <div className="table-box">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>#</th>
-                            <th>Policy Name</th>
-                            <th>Type</th>
-                            <th>Premium</th>
-                            <th>Duration</th>
-                            <th>Status</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {filtered.map((policy) => (
-                            <tr key={policy.id}>
-                                <td>{policy.id}</td>
-                                <td>{policy.name}</td>
-                                <td>{policy.type}</td>
-                                <td>{policy.premium}</td>
-                                <td>{policy.duration}</td>
-                                <td>
-                                    <span className={`badge badge--${policy.status.toLowerCase()}`}>
-                                        {policy.status}
-                                    </span>
-                                </td>
-                                <td>
-                                    <button className="btn-view" onClick={() => openView(policy)}>
-                                        👁 View
-                                    </button>
-                                    <button className="btn-delete" onClick={() => openDelete(policy)}>
-                                        🗑 Delete
-                                    </button>
-                                </td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
+            {/* MUI DataGrid — has sorting, filtering, pagination built in */}
+            <div className="table-box" style={{ height: 420, width: "100%" }}>
+                <DataGrid
+                    rows={policies}
+                    columns={columns}
+                    pageSize={5}
+                    rowsPerPageOptions={[5]}
+                    disableSelectionOnClick
+                />
             </div>
 
             {/* ADD NEW POLICY POPUP */}
@@ -154,6 +177,7 @@ function Policies() {
                         <div className="form__group">
                             <label>Policy Name *</label>
                             <input name="name" value={form.name} onChange={handleChange} placeholder="e.g. Health Premium" />
+                            {errors.name && <p style={{ color: "red", fontSize: "12px" }}>{errors.name}</p>}
                         </div>
 
                         <div className="form__group">
@@ -169,11 +193,13 @@ function Policies() {
                         <div className="form__group">
                             <label>Premium Amount ($) *</label>
                             <input name="premium" value={form.premium} onChange={handleChange} placeholder="e.g. 200" type="number" />
+                            {errors.premium && <p style={{ color: "red", fontSize: "12px" }}>{errors.premium}</p>}
                         </div>
 
                         <div className="form__group">
                             <label>Duration *</label>
                             <input name="duration" value={form.duration} onChange={handleChange} placeholder="e.g. 1 Year" />
+                            {errors.duration && <p style={{ color: "red", fontSize: "12px" }}>{errors.duration}</p>}
                         </div>
 
                         <div className="form__group">
@@ -186,8 +212,9 @@ function Policies() {
                         </div>
 
                         <div className="form__group">
-                            <label>Upload Brochure (Image/PDF)</label>
+                            <label>Upload Brochure (JPG, PNG or PDF — max 2MB)</label>
                             <input type="file" accept="image/*,.pdf" onChange={handleFile} />
+                            {/* Show image preview if file is an image */}
                             {preview && <img className="preview__img" src={preview} alt="preview" />}
                         </div>
 

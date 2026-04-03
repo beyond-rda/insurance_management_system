@@ -1,0 +1,53 @@
+.payments {
+    padding: 10px;
+}
+
+.payments__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+}
+
+.payments__title {
+    font-size: 24px;
+    font-weight: bold;
+    color: var(--text-color);
+}
+
+.badge--paid {
+    background-color: #e8f5e9;
+    color: #2e7d32;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.badge--unpaid {
+    background-color: #ffebee;
+    color: #c62828;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.badge--overdue {
+    background-color: #fff8e1;
+    color: #f57f17;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+
+    .payments__header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+    }
+}

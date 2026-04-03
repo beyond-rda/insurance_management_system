@@ -1,0 +1,46 @@
+/* Light mode colors */
+[data-theme="light"] {
+    --bg-color: #f4f6f8;
+    --text-color: #222222;
+    --sidebar-bg: #1565c0;
+    --content-bg: #f4f6f8;
+    --card-bg: #ffffff;
+}
+
+[data-theme="dark"] {
+    --bg-color: #121212;
+    --text-color: #ffffff;
+    --sidebar-bg: #1a1a2e;
+    --content-bg: #1e1e1e;
+    --card-bg: #2a2a2a;
+}
+
+/* General layout */
+.app {
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    min-height: 100vh;
+}
+
+.app__body {
+    display: flex;
+}
+
+.app__content {
+    flex-grow: 1;
+    padding: 24px;
+    background-color: var(--content-bg);
+    min-height: calc(100vh - 60px);
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+
+    .app__body {
+        flex-direction: column;
+    }
+
+    .app__content {
+        padding: 12px;
+    }
+}

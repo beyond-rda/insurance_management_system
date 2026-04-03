@@ -4,8 +4,9 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 // Layout components
 import Header from "./components/Header";
 import Sidebar from "./components/Sidebar";
-
+import Footer from "./components/Footer";
 // Pages
+import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import Policies from "./pages/Policies";
 import Clients from "./pages/Clients";
@@ -23,10 +24,16 @@ function App() {
   // true = sidebar visible, false = sidebar hidden
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
-  return (
-    // data-theme tells our SCSS which colors to use
-    <div className="app" data-theme={darkMode ? "dark" : "light"}>
+  // false = not logged in, true = logged in
+  const [loggedIn, setLoggedIn] = useState(false);
 
+  // If not logged in show Login page only
+  if (!loggedIn) {
+    return <Login onLogin={() => setLoggedIn(true)} />;
+  }
+
+  return (
+    <div className="app" data-theme={darkMode ? "dark" : "light"}>
       <BrowserRouter>
 
         {/* Top header bar */}
@@ -34,6 +41,7 @@ function App() {
           toggleSidebar={() => setSidebarOpen(!sidebarOpen)}
           darkMode={darkMode}
           toggleDarkMode={() => setDarkMode(!darkMode)}
+          onLogout={() => setLoggedIn(false)}
         />
 
         {/* Body: sidebar + main content side by side */}
@@ -60,6 +68,9 @@ function App() {
           </div>
 
         </div>
+
+        {/* Footer */}
+        <Footer />
 
       </BrowserRouter>
     </div>

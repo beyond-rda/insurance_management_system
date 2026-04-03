@@ -1,0 +1,16 @@
+.clients {
+    padding: 10px;
+}
+
+.clients__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+}
+
+.clients__title {
+    font-size: 24px;
+    font-weight: bold;
+    color: var(--text-color);
+}

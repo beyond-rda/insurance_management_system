@@ -1,7 +1,7 @@
 import React from "react";
 import "../styles/Header.scss";
 
-function Header({ toggleSidebar, darkMode, toggleDarkMode }) {
+function Header({ toggleSidebar, darkMode, toggleDarkMode, onLogout }) {
     return (
         <div className="header">
 
@@ -13,14 +13,19 @@ function Header({ toggleSidebar, darkMode, toggleDarkMode }) {
             {/* Buttons on the right */}
             <div className="header__buttons">
 
-                {/* Toggle sidebar button */}
+                {/* Toggle sidebar */}
                 <button className="header__btn" onClick={toggleSidebar}>
                     ☰ Menu
                 </button>
 
                 {/* Toggle dark/light mode */}
                 <button className="header__btn" onClick={toggleDarkMode}>
-                    {darkMode ? "☀️ Light Mode" : "🌙 Dark Mode"}
+                    {darkMode ? "☀️ Light" : "🌙 Dark"}
+                </button>
+
+                {/* Logout button */}
+                <button className="header__btn header__btn--logout" onClick={onLogout}>
+                    🚪 Logout
                 </button>
 
             </div>
