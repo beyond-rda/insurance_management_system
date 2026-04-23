@@ -1,249 +1,226 @@
-import React, { useState } from "react";
-import "../styles/Policies.scss";
-import "../styles/Payments.scss";
+import { useState } from 'react';
+import {
+  Box,
+  Typography,
+  TextField,
+  Paper,
+  Chip,
+  Button,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+} from '@mui/material';
+import { DataGrid } from '@mui/x-data-grid';
+import { Add } from '@mui/icons-material';
+import { useApp } from '../context/AppContext';
 
-// Sample payments data
-const initialPayments = [
-    { id: 1, client: "John Mugisha", policy: "Health Basic", amount: "$200", date: "2024-01-10", method: "Mobile Money", status: "Paid" },
-    { id: 2, client: "Alice Uwase", policy: "Motor Cover", amount: "$150", date: "2024-02-05", method: "Bank Transfer", status: "Paid" },
-    { id: 3, client: "Bob Nkurunziza", policy: "Life Assurance", amount: "$250", date: "2024-03-01", method: "Cash", status: "Unpaid" },
-    { id: 4, client: "Grace Mutoni", policy: "Property Shield", amount: "$300", date: "2024-03-15", method: "Mobile Money", status: "Overdue" },
-];
+const emptyForm = {
+  clientName: '',
+  policyName: '',
+  amount: '',
+  date: '',
+  status: 'pending',
+};
 
-function Payments() {
+const Payments = () => {
+  const { payments, clients, policies, addPayment } = useApp();
+  const [searchTerm, setSearchTerm] = useState('');
+  const [open, setOpen] = useState(false);
+  const [errors, setErrors] = useState({});
+  const [formData, setFormData] = useState(emptyForm);
 
-    // List of payments
-    const [payments, setPayments] = useState(initialPayments);
+  const columns = [
+    { field: 'id', headerName: 'ID', width: 90 },
+    { field: 'clientName', headerName: 'Client', flex: 1 },
+    { field: 'policyName', headerName: 'Policy', flex: 1 },
+    {
+      field: 'amount',
+      headerName: 'Amount (RF)',
+      width: 160,
+      renderCell: (params) => `${params.value.toLocaleString()} RF`,
+    },
+    { field: 'date', headerName: 'Date', width: 130 },
+    {
+      field: 'status',
+      headerName: 'Status',
+      width: 130,
+      renderCell: (params) => (
+        <Chip
+          label={params.value}
+          color={params.value === 'completed' ? 'success' : 'warning'}
+          size="small"
+        />
+      ),
+    },
+  ];
 
-    // Controls which popup is open
-    const [popup, setPopup] = useState(null);
+  const validateForm = () => {
+    const newErrors = {};
+    if (!formData.clientName) newErrors.clientName = 'Client is required';
+    if (!formData.policyName) newErrors.policyName = 'Policy is required';
+    if (!formData.amount || Number.isNaN(Number(formData.amount)) || Number(formData.amount) <= 0) {
+      newErrors.amount = 'Enter a valid payment amount';
+    }
+    if (!formData.date) newErrors.date = 'Payment date is required';
+    if (!formData.status) newErrors.status = 'Status is required';
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
-    // Currently selected payment
-    const [selected, setSelected] = useState(null);
+  const handleSubmit = () => {
+    if (!validateForm()) return;
+    addPayment(formData);
+    setOpen(false);
+    setFormData(emptyForm);
+    setErrors({});
+  };
 
-    // Search text
-    const [search, setSearch] = useState("");
+  const filteredPayments = payments.filter(
+    (payment) =>
+      payment.clientName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      payment.policyName.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
-    // Form for adding new payment
-    const [form, setForm] = useState({
-        client: "", policy: "Health Basic", amount: "", date: "", method: "Mobile Money", status: "Paid"
-    });
+  const totalCompleted = payments
+    .filter((payment) => payment.status === 'completed')
+    .reduce((sum, payment) => sum + payment.amount, 0);
+  const totalPending = payments
+    .filter((payment) => payment.status === 'pending')
+    .reduce((sum, payment) => sum + payment.amount, 0);
 
-    // Form errors
-    const [errors, setErrors] = useState({});
+  return (
+    <Box className="page-container">
+      <Typography variant="h4" className="page-title">
+        Payments Management
+      </Typography>
 
-    // Open view popup
-    const openView = (payment) => {
-        setSelected(payment);
-        setPopup("view");
-    };
+      <Box className="card-grid">
+        <Paper className="stat-card">
+          <Typography variant="h6" color="success.main">
+            Completed Payments
+          </Typography>
+          <Typography variant="h4">{totalCompleted.toLocaleString()} RF</Typography>
+        </Paper>
+        <Paper className="stat-card">
+          <Typography variant="h6" color="warning.main">
+            Pending Payments
+          </Typography>
+          <Typography variant="h4">{totalPending.toLocaleString()} RF</Typography>
+        </Paper>
+      </Box>
 
-    // Open delete popup
-    const openDelete = (payment) => {
-        setSelected(payment);
-        setPopup("delete");
-    };
+      <Box className="filter-bar">
+        <TextField
+          label="Search payments..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          size="small"
+          sx={{ minWidth: 250 }}
+        />
+        <Button variant="contained" startIcon={<Add />} onClick={() => setOpen(true)}>
+          Add Payment
+        </Button>
+      </Box>
 
-    // Delete selected payment
-    const deletePayment = () => {
-        setPayments(payments.filter((p) => p.id !== selected.id));
-        setPopup(null);
-    };
+      <Paper sx={{ height: 500, width: '100%' }}>
+        <DataGrid
+          rows={filteredPayments}
+          columns={columns}
+          pageSize={5}
+          rowsPerPageOptions={[5, 10, 20]}
+          checkboxSelection
+          disableRowSelectionOnClick
+        />
+      </Paper>
 
-    // Handle form changes
-    const handleChange = (e) => {
-        setForm({ ...form, [e.target.name]: e.target.value });
-    };
-
-    // Validate form
-    const validate = () => {
-        let newErrors = {};
-        if (!form.client) newErrors.client = "Client name is required";
-        if (!form.amount || isNaN(form.amount)) newErrors.amount = "Amount must be a number";
-        if (!form.date) newErrors.date = "Date is required";
-        setErrors(newErrors);
-        return Object.keys(newErrors).length === 0;
-    };
-
-    // Save new payment
-    const savePayment = () => {
-        if (!validate()) return;
-        const newPayment = {
-            id: payments.length + 1,
-            ...form,
-            amount: "$" + form.amount,
-        };
-        setPayments([...payments, newPayment]);
-        setPopup(null);
-        setForm({ client: "", policy: "Health Basic", amount: "", date: "", method: "Mobile Money", status: "Paid" });
-        setErrors({});
-    };
-
-    // Filter payments by search
-    const filtered = payments.filter((p) =>
-        p.client.toLowerCase().includes(search.toLowerCase())
-    );
-
-    return (
-        <div className="payments">
-
-            {/* Page header */}
-            <div className="payments__header">
-                <h1 className="payments__title">💳 Payments</h1>
-                <button className="btn-add" onClick={() => setPopup("add")}>
-                    + Add New Payment
-                </button>
-            </div>
-
-            {/* Search bar */}
-            <input
-                className="search__bar"
-                type="text"
-                placeholder="🔍 Search payments..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
+      <Dialog open={open} onClose={() => setOpen(false)} maxWidth="sm" fullWidth>
+        <DialogTitle>Add New Payment</DialogTitle>
+        <DialogContent>
+          <Box className="form-container" sx={{ mt: 2 }}>
+            <FormControl fullWidth margin="dense" error={!!errors.clientName}>
+              <InputLabel>Client</InputLabel>
+              <Select
+                value={formData.clientName}
+                label="Client"
+                onChange={(e) => setFormData({ ...formData, clientName: e.target.value })}
+              >
+                {clients.map((client) => (
+                  <MenuItem key={client.id} value={client.name}>
+                    {client.name}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+            <FormControl fullWidth margin="dense" error={!!errors.policyName}>
+              <InputLabel>Policy</InputLabel>
+              <Select
+                value={formData.policyName}
+                label="Policy"
+                onChange={(e) => setFormData({ ...formData, policyName: e.target.value })}
+              >
+                {policies.map((policy) => (
+                  <MenuItem key={policy.id} value={policy.name}>
+                    {policy.name}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+            <TextField
+              fullWidth
+              label="Amount (RF)"
+              type="number"
+              margin="dense"
+              value={formData.amount}
+              onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
+              error={!!errors.amount}
+              helperText={errors.amount}
             />
-
-            {/* Payments Table */}
-            <div className="table-box">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>#</th>
-                            <th>Client</th>
-                            <th>Policy</th>
-                            <th>Amount</th>
-                            <th>Date</th>
-                            <th>Method</th>
-                            <th>Status</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {filtered.map((payment) => (
-                            <tr key={payment.id}>
-                                <td>{payment.id}</td>
-                                <td>{payment.client}</td>
-                                <td>{payment.policy}</td>
-                                <td>{payment.amount}</td>
-                                <td>{payment.date}</td>
-                                <td>{payment.method}</td>
-                                <td>
-                                    <span className={`badge badge--${payment.status.toLowerCase()}`}>
-                                        {payment.status}
-                                    </span>
-                                </td>
-                                <td>
-                                    <button className="btn-view" onClick={() => openView(payment)}>
-                                        👁 View
-                                    </button>
-                                    <button className="btn-delete" onClick={() => openDelete(payment)}>
-                                        🗑 Delete
-                                    </button>
-                                </td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
-            </div>
-
-            {/* ADD NEW PAYMENT POPUP */}
-            {popup === "add" && (
-                <div className="popup__overlay">
-                    <div className="popup__box">
-                        <h2 className="popup__title">➕ Add New Payment</h2>
-
-                        <div className="form__group">
-                            <label>Client Name *</label>
-                            <input name="client" value={form.client} onChange={handleChange} placeholder="e.g. John Mugisha" />
-                            {errors.client && <p style={{ color: "red", fontSize: "12px" }}>{errors.client}</p>}
-                        </div>
-
-                        <div className="form__group">
-                            <label>Policy</label>
-                            <select name="policy" value={form.policy} onChange={handleChange}>
-                                <option>Health Basic</option>
-                                <option>Motor Cover</option>
-                                <option>Property Shield</option>
-                                <option>Life Assurance</option>
-                            </select>
-                        </div>
-
-                        <div className="form__group">
-                            <label>Amount ($) *</label>
-                            <input name="amount" value={form.amount} onChange={handleChange} placeholder="e.g. 200" type="number" />
-                            {errors.amount && <p style={{ color: "red", fontSize: "12px" }}>{errors.amount}</p>}
-                        </div>
-
-                        <div className="form__group">
-                            <label>Date *</label>
-                            <input name="date" value={form.date} onChange={handleChange} type="date" />
-                            {errors.date && <p style={{ color: "red", fontSize: "12px" }}>{errors.date}</p>}
-                        </div>
-
-                        <div className="form__group">
-                            <label>Payment Method</label>
-                            <select name="method" value={form.method} onChange={handleChange}>
-                                <option>Mobile Money</option>
-                                <option>Bank Transfer</option>
-                                <option>Cash</option>
-                            </select>
-                        </div>
-
-                        <div className="form__group">
-                            <label>Status</label>
-                            <select name="status" value={form.status} onChange={handleChange}>
-                                <option>Paid</option>
-                                <option>Unpaid</option>
-                                <option>Overdue</option>
-                            </select>
-                        </div>
-
-                        <div className="popup__buttons">
-                            <button className="btn-cancel" onClick={() => setPopup(null)}>Cancel</button>
-                            <button className="btn-save" onClick={savePayment}>Save Payment</button>
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            {/* VIEW PAYMENT POPUP */}
-            {popup === "view" && selected && (
-                <div className="popup__overlay">
-                    <div className="popup__box">
-                        <h2 className="popup__title">👁 Payment Details</h2>
-
-                        <p className="details__item"><span>Client:</span> {selected.client}</p>
-                        <p className="details__item"><span>Policy:</span> {selected.policy}</p>
-                        <p className="details__item"><span>Amount:</span> {selected.amount}</p>
-                        <p className="details__item"><span>Date:</span> {selected.date}</p>
-                        <p className="details__item"><span>Method:</span> {selected.method}</p>
-                        <p className="details__item"><span>Status:</span> {selected.status}</p>
-
-                        <div className="popup__buttons">
-                            <button className="btn-cancel" onClick={() => setPopup(null)}>Close</button>
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            {/* DELETE CONFIRMATION POPUP */}
-            {popup === "delete" && selected && (
-                <div className="popup__overlay">
-                    <div className="popup__box">
-                        <h2 className="popup__title">🗑 Delete Payment</h2>
-                        <p>Are you sure you want to delete <strong>{selected.client}</strong>'s payment?</p>
-
-                        <div className="popup__buttons">
-                            <button className="btn-cancel" onClick={() => setPopup(null)}>Cancel</button>
-                            <button className="btn-confirm-delete" onClick={deletePayment}>Yes, Delete</button>
-                        </div>
-                    </div>
-                </div>
-            )}
-
-        </div>
-    );
-}
+            <TextField
+              fullWidth
+              label="Payment Date"
+              type="date"
+              margin="dense"
+              value={formData.date}
+              onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+              error={!!errors.date}
+              helperText={errors.date}
+              InputLabelProps={{ shrink: true }}
+            />
+            <FormControl fullWidth margin="dense" error={!!errors.status}>
+              <InputLabel>Status</InputLabel>
+              <Select
+                value={formData.status}
+                label="Status"
+                onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+              >
+                <MenuItem value="pending">Pending</MenuItem>
+                <MenuItem value="completed">Completed</MenuItem>
+              </Select>
+            </FormControl>
+          </Box>
+        </DialogContent>
+        <DialogActions>
+          <Button
+            onClick={() => {
+              setOpen(false);
+              setFormData(emptyForm);
+              setErrors({});
+            }}
+          >
+            Cancel
+          </Button>
+          <Button onClick={handleSubmit} variant="contained">
+            Save Payment
+          </Button>
+        </DialogActions>
+      </Dialog>
+    </Box>
+  );
+};
 
 export default Payments;

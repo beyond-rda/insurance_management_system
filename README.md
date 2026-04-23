@@ -1,16 +1,67 @@
-# React + Vite
+# Insurance Management System
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+This project is an end-to-end Insurance Management System built with React, SCSS, MUI, React Router, and Recharts. It supports policy registration, client management, claim processing, premium payment tracking, and analytics reporting.
 
-Currently, two official plugins are available:
+## Stack
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- React + Vite
+- SCSS
+- MUI
+- MUI DataGrid
+- React Router
+- Recharts
 
-## React Compiler
+## Modules
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- `Policies`: register policy types, upload brochures, search, filter, sort, paginate, view, edit, and delete.
+- `Clients`: register clients, validate inputs, view full details, edit, and delete.
+- `Applications`: review submitted insurance applications and inspect their policy-specific fields.
+- `Claims`: submit claims with document uploads, preview files, and approve or reject claims.
+- `Payments`: track payments in a DataGrid and add new payment records through a validated form.
+- `Reports`: visualize policy distribution, claim status, premium trends, branch performance, and risk levels using Recharts.
 
-## Expanding the ESLint configuration
+## Routing
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+- `/` - Login
+- `/register` - Client registration
+- `/admin/dashboard`
+- `/admin/policies`
+- `/admin/clients`
+- `/admin/applications`
+- `/admin/claims`
+- `/admin/payments`
+- `/admin/reports`
+- `/client/home`
+- `/client/policies`
+- `/client/claims`
+
+## Features Mapped to Assessment
+
+- Component-based React architecture across layouts, pages, and context
+- SCSS-based styling with shared global structure
+- Dark and Light mode through MUI Theme Provider
+- Theme toggle in the header and sidebar
+- React Router navigation with admin and client dashboards
+- MUI DataGrid with sorting, filtering, pagination, and search
+- Dialogs for View and Delete actions
+- Add New forms in Policies, Clients, Claims, Payments, and Reports
+- File uploads with preview and validation
+- Form validation for email, phone, numeric values, required fields, file type, and file size
+- Recharts analytics dashboards
+- Claim approval and rejection workflow
+- Responsive admin and client layouts
+
+## Demo Credentials
+
+Use any valid email and any password with at least 4 characters.
+
+## How to Run
+
+```bash
+npm install
+npm run dev
+```
+
+## Presentation Tip
+
+Use the admin role first to show full system control, then switch to the client role to show customer-facing policy application and claim submission.

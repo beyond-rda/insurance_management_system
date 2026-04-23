@@ -1,0 +1,217 @@
+.public__page {
+    min-height: 100vh;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    padding: 2rem;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.public__header {
+    text-align: center;
+    color: white;
+    margin-bottom: 3rem;
+
+    h1 {
+        font-size: 3rem;
+        margin-bottom: 0.5rem;
+    }
+
+    p {
+        font-size: 1.2rem;
+        opacity: 0.9;
+    }
+}
+
+.public__content {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+    max-width: 1400px;
+    margin: 0 auto;
+
+    @media (max-width: 1024px) {
+        grid-template-columns: 1fr;
+    }
+}
+
+.public__policies {
+    h2 {
+        color: white;
+        font-size: 1.8rem;
+        margin-bottom: 1.5rem;
+    }
+}
+
+.policy__grid {
+    display: grid;
+    gap: 1.5rem;
+}
+
+.policy__card {
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+
+    &:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+    }
+}
+
+.policy__icon {
+    font-size: 2.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.policy__card h3 {
+    color: #333;
+    margin-bottom: 0.3rem;
+}
+
+.policy__type {
+    color: #667eea;
+    font-weight: 600;
+    font-size: 0.9rem;
+    margin-bottom: 0.8rem;
+}
+
+.policy__desc {
+    color: #666;
+    font-size: 0.95rem;
+    line-height: 1.5;
+    margin-bottom: 1rem;
+}
+
+.policy__price {
+    margin-bottom: 1rem;
+
+    .price__amount {
+        font-size: 1.8rem;
+        font-weight: bold;
+        color: #333;
+    }
+
+    .price__duration {
+        color: #666;
+        font-size: 0.9rem;
+    }
+}
+
+.btn-select {
+    width: 100%;
+    padding: 0.8rem;
+    background: #667eea;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.3s ease;
+
+    &:hover {
+        background: #5568d3;
+    }
+}
+
+.public__form {
+    background: white;
+    border-radius: 12px;
+    padding: 2rem;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    height: fit-content;
+
+    h2 {
+        color: #333;
+        font-size: 1.8rem;
+        margin-bottom: 1.5rem;
+    }
+}
+
+.form__group {
+    margin-bottom: 1.2rem;
+
+    label {
+        display: block;
+        margin-bottom: 0.5rem;
+        color: #333;
+        font-weight: 600;
+    }
+
+    input, select, textarea {
+        width: 100%;
+        padding: 0.8rem;
+        border: 2px solid #e0e0e0;
+        border-radius: 8px;
+        font-size: 1rem;
+        transition: border-color 0.3s ease;
+
+        &:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+    }
+
+    .error {
+        color: #e53935;
+        font-size: 0.85rem;
+        margin-top: 0.3rem;
+    }
+}
+
+.btn-submit {
+    width: 100%;
+    padding: 1rem;
+    background: #764ba2;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.3s ease;
+
+    &:hover {
+        background: #6a4090;
+    }
+}
+
+.btn-primary {
+    padding: 0.8rem 1.5rem;
+    background: #667eea;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: 1rem;
+}
+
+.public__success {
+    text-align: center;
+    color: white;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    padding: 3rem;
+    max-width: 500px;
+    margin: 0 auto;
+
+    h1 {
+        font-size: 2.5rem;
+        margin-bottom: 1rem;
+    }
+
+    p {
+        font-size: 1.1rem;
+        margin-bottom: 0.5rem;
+    }
+}
+
+.public__footer {
+    text-align: center;
+    color: white;
+    margin-top: 3rem;
+    opacity: 0.8;
+}

@@ -1,263 +1,186 @@
-import React, { useState } from "react";
-import "../styles/Policies.scss";
-import "../styles/Claims.scss";
+import { useState } from 'react';
+import { Box, Typography, Button, TextField, Dialog, DialogTitle, DialogContent, DialogActions, FormControl, InputLabel, Select, MenuItem, IconButton, Paper, Chip } from '@mui/material';
+import { DataGrid } from '@mui/x-data-grid';
+import { Add, Visibility, Check, Close, CloudUpload } from '@mui/icons-material';
+import { useApp } from '../context/AppContext';
 
-// Sample claims data
-const initialClaims = [
-    { id: 1, client: "John Mugisha", policy: "Health Basic", amount: "$500", date: "2024-01-15", reason: "Hospital admission", status: "Pending" },
-    { id: 2, client: "Alice Uwase", policy: "Motor Cover", amount: "$1200", date: "2024-02-10", reason: "Car accident repair", status: "Pending" },
-    { id: 3, client: "Bob Nkurunziza", policy: "Life Assurance", amount: "$3000", date: "2024-03-05", reason: "Critical illness", status: "Approved" },
-    { id: 4, client: "Grace Mutoni", policy: "Property Shield", amount: "$800", date: "2024-03-20", reason: "Fire damage", status: "Rejected" },
-];
+const Claims = () => {
+  const { claims, policies, clients, addClaim, updateClaimStatus } = useApp();
+  const [open, setOpen] = useState(false);
+  const [viewOpen, setViewOpen] = useState(false);
+  const [selectedClaim, setSelectedClaim] = useState(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState('');
+  const [errors, setErrors] = useState({});
+  const [formData, setFormData] = useState({ policyId: '', description: '', amount: '', documents: null, documentsPreview: null });
 
-function Claims() {
+  const validateForm = () => {
+    const newErrors = {};
+    if (!formData.policyId) newErrors.policyId = 'Policy is required';
+    if (!formData.description.trim()) newErrors.description = 'Description is required';
+    if (!formData.amount || isNaN(formData.amount) || Number(formData.amount) <= 0) {
+      newErrors.amount = 'Valid amount is required';
+    }
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
-    // List of claims
-    const [claims, setClaims] = useState(initialClaims);
+  const handleSubmit = () => {
+    if (validateForm()) {
+      const policy = policies.find(p => p.id === formData.policyId);
+      const client = clients[0];
+      addClaim({
+        policyId: formData.policyId,
+        policyName: policy?.name || '',
+        clientName: client?.name || '',
+        description: formData.description,
+        amount: Number(formData.amount),
+        documents: formData.documents
+      });
+      handleClose();
+    }
+  };
 
-    // Controls which popup is open
-    const [popup, setPopup] = useState(null);
+  const handleClose = () => {
+    setOpen(false);
+    setFormData({ policyId: '', description: '', amount: '', documents: null, documentsPreview: null });
+    setErrors({});
+  };
 
-    // Currently selected claim
-    const [selected, setSelected] = useState(null);
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+        setErrors({ ...errors, file: 'File size must be less than 5MB' });
+        return;
+      }
+      if (!['application/pdf', 'image/jpeg', 'image/png'].includes(file.type)) {
+        setErrors({ ...errors, file: 'Only PDF, JPG, and PNG files are allowed' });
+        return;
+      }
+      setFormData({ ...formData, documents: file, documentsPreview: URL.createObjectURL(file) });
+      setErrors({ ...errors, file: null });
+    }
+  };
 
-    // Search text
-    const [search, setSearch] = useState("");
+  const columns = [
+    { field: 'id', headerName: 'ID', width: 70 },
+    { field: 'policyName', headerName: 'Policy', flex: 1 },
+    { field: 'clientName', headerName: 'Client', width: 150 },
+    { field: 'description', headerName: 'Description', flex: 1 },
+    { field: 'amount', headerName: 'Amount (RF)', width: 140, renderCell: (params) => `${params.value.toLocaleString()} RF` },
+    { field: 'date', headerName: 'Date', width: 100 },
+    { field: 'status', headerName: 'Status', width: 120, renderCell: (params) => (
+      <Chip 
+        label={params.value} 
+        color={params.value === 'approved' ? 'success' : params.value === 'rejected' ? 'error' : 'warning'}
+        size="small"
+      />
+    )},
+    {
+      field: 'actions', headerName: 'Actions', width: 200, renderCell: (params) => (
+        <Box className="action-buttons">
+          <IconButton size="small" onClick={() => { setSelectedClaim(params.row); setViewOpen(true); }}>
+            <Visibility />
+          </IconButton>
+          {params.row.status === 'pending' && (
+            <>
+              <IconButton size="small" color="success" onClick={() => updateClaimStatus(params.row.id, 'approved')}>
+                <Check />
+              </IconButton>
+              <IconButton size="small" color="error" onClick={() => updateClaimStatus(params.row.id, 'rejected')}>
+                <Close />
+              </IconButton>
+            </>
+          )}
+        </Box>
+      )
+    }
+  ];
 
-    // Form for adding new claim
-    const [form, setForm] = useState({
-        client: "", policy: "Health Basic", amount: "", date: "", reason: ""
-    });
+  const filteredClaims = claims.filter(c => {
+    const matchesSearch = c.policyName.toLowerCase().includes(searchTerm.toLowerCase()) || c.clientName.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesStatus = !statusFilter || c.status === statusFilter;
+    return matchesSearch && matchesStatus;
+  });
 
-    // Form errors
-    const [errors, setErrors] = useState({});
+  return (
+    <Box className="page-container">
+      <Typography variant="h4" className="page-title">Claims Management</Typography>
+      
+      <Box className="filter-bar">
+        <TextField label="Search claims..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} size="small" sx={{ minWidth: 250 }} />
+        <FormControl size="small" sx={{ minWidth: 150 }}>
+          <InputLabel>Filter by Status</InputLabel>
+          <Select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} label="Filter by Status">
+            <MenuItem value="">All</MenuItem>
+            <MenuItem value="pending">Pending</MenuItem>
+            <MenuItem value="approved">Approved</MenuItem>
+            <MenuItem value="rejected">Rejected</MenuItem>
+          </Select>
+        </FormControl>
+        <Button variant="contained" startIcon={<Add />} onClick={() => setOpen(true)}>Add Claim</Button>
+      </Box>
 
-    // Open view popup
-    const openView = (claim) => {
-        setSelected(claim);
-        setPopup("view");
-    };
+      <Paper sx={{ height: 500, width: '100%' }}>
+        <DataGrid rows={filteredClaims} columns={columns} pageSize={5} rowsPerPageOptions={[5, 10, 20]} checkboxSelection disableRowSelectionOnClick />
+      </Paper>
 
-    // Open delete popup
-    const openDelete = (claim) => {
-        setSelected(claim);
-        setPopup("delete");
-    };
+      <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
+        <DialogTitle>Submit New Claim</DialogTitle>
+        <DialogContent>
+          <Box className="form-container" sx={{ mt: 2 }}>
+            <FormControl fullWidth margin="dense" error={!!errors.policyId}>
+              <InputLabel>Select Policy</InputLabel>
+              <Select value={formData.policyId} onChange={(e) => setFormData({ ...formData, policyId: e.target.value })} label="Select Policy">
+                {policies.map(p => <MenuItem key={p.id} value={p.id}>{p.name}</MenuItem>)}
+              </Select>
+            </FormControl>
+            <TextField fullWidth label="Description" multiline rows={3} value={formData.description} onChange={(e) => setFormData({ ...formData, description: e.target.value })} error={!!errors.description} helperText={errors.description} margin="dense" />
+            <TextField fullWidth label="Claim Amount (RF)" type="number" value={formData.amount} onChange={(e) => setFormData({ ...formData, amount: e.target.value })} error={!!errors.amount} helperText={errors.amount} margin="dense" />
+            <Box sx={{ mt: 2 }}>
+              <Typography variant="body2" gutterBottom>Upload Supporting Documents (PDF/Image, max 5MB)</Typography>
+              <label className="file-upload-area">
+                <input type="file" accept=".pdf,image/*" onChange={handleFileChange} style={{ display: 'none' }} />
+                <CloudUpload sx={{ fontSize: 40, color: 'grey.500' }} />
+                <Typography variant="body2">Click to upload documents</Typography>
+              </label>
+              {formData.documentsPreview && (
+                <Box sx={{ mt: 2 }}>
+                  <img src={formData.documentsPreview} alt="Preview" className="file-preview" style={{ maxHeight: 150 }} />
+                  <Typography variant="body2" sx={{ mt: 1 }}>{formData.documents.name}</Typography>
+                </Box>
+              )}
+              {errors.file && <Typography color="error" variant="body2">{errors.file}</Typography>}
+            </Box>
+          </Box>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleClose}>Cancel</Button>
+          <Button onClick={handleSubmit} variant="contained">Submit</Button>
+        </DialogActions>
+      </Dialog>
 
-    // Approve a claim — changes its status to Approved
-    const approveClaim = (id) => {
-        setClaims(claims.map((c) =>
-            c.id === id ? { ...c, status: "Approved" } : c
-        ));
-    };
-
-    // Reject a claim — changes its status to Rejected
-    const rejectClaim = (id) => {
-        setClaims(claims.map((c) =>
-            c.id === id ? { ...c, status: "Rejected" } : c
-        ));
-    };
-
-    // Delete selected claim
-    const deleteClaim = () => {
-        setClaims(claims.filter((c) => c.id !== selected.id));
-        setPopup(null);
-    };
-
-    // Handle form changes
-    const handleChange = (e) => {
-        setForm({ ...form, [e.target.name]: e.target.value });
-    };
-
-    // Validate form
-    const validate = () => {
-        let newErrors = {};
-        if (!form.client) newErrors.client = "Client name is required";
-        if (!form.amount || isNaN(form.amount)) newErrors.amount = "Amount must be a number";
-        if (!form.date) newErrors.date = "Date is required";
-        if (!form.reason) newErrors.reason = "Reason is required";
-        setErrors(newErrors);
-        return Object.keys(newErrors).length === 0;
-    };
-
-    // Save new claim
-    const saveClaim = () => {
-        if (!validate()) return;
-        const newClaim = {
-            id: claims.length + 1,
-            ...form,
-            amount: "$" + form.amount,
-            status: "Pending",
-        };
-        setClaims([...claims, newClaim]);
-        setPopup(null);
-        setForm({ client: "", policy: "Health Basic", amount: "", date: "", reason: "" });
-        setErrors({});
-    };
-
-    // Filter claims by search
-    const filtered = claims.filter((c) =>
-        c.client.toLowerCase().includes(search.toLowerCase())
-    );
-
-    return (
-        <div className="claims">
-
-            {/* Page header */}
-            <div className="claims__header">
-                <h1 className="claims__title">📋 Claims</h1>
-                <button className="btn-add" onClick={() => setPopup("add")}>
-                    + Add New Claim
-                </button>
-            </div>
-
-            {/* Search bar */}
-            <input
-                className="search__bar"
-                type="text"
-                placeholder="🔍 Search claims..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-            />
-
-            {/* Claims Table */}
-            <div className="table-box">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>#</th>
-                            <th>Client</th>
-                            <th>Policy</th>
-                            <th>Amount</th>
-                            <th>Date</th>
-                            <th>Status</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {filtered.map((claim) => (
-                            <tr key={claim.id}>
-                                <td>{claim.id}</td>
-                                <td>{claim.client}</td>
-                                <td>{claim.policy}</td>
-                                <td>{claim.amount}</td>
-                                <td>{claim.date}</td>
-                                <td>
-                                    {/* Show colored badge based on status */}
-                                    <span className={`badge badge--${claim.status.toLowerCase()}`}>
-                                        {claim.status}
-                                    </span>
-                                </td>
-                                <td>
-                                    {/* Only show Approve/Reject if claim is still Pending */}
-                                    {claim.status === "Pending" && (
-                                        <>
-                                            <button className="btn-approve" onClick={() => approveClaim(claim.id)}>
-                                                ✅ Approve
-                                            </button>
-                                            <button className="btn-reject" onClick={() => rejectClaim(claim.id)}>
-                                                ❌ Reject
-                                            </button>
-                                        </>
-                                    )}
-                                    <button className="btn-view" onClick={() => openView(claim)}>
-                                        👁 View
-                                    </button>
-                                    <button className="btn-delete" onClick={() => openDelete(claim)}>
-                                        🗑 Delete
-                                    </button>
-                                </td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
-            </div>
-
-            {/* ADD NEW CLAIM POPUP */}
-            {popup === "add" && (
-                <div className="popup__overlay">
-                    <div className="popup__box">
-                        <h2 className="popup__title">➕ Add New Claim</h2>
-
-                        <div className="form__group">
-                            <label>Client Name *</label>
-                            <input name="client" value={form.client} onChange={handleChange} placeholder="e.g. John Mugisha" />
-                            {errors.client && <p style={{ color: "red", fontSize: "12px" }}>{errors.client}</p>}
-                        </div>
-
-                        <div className="form__group">
-                            <label>Policy</label>
-                            <select name="policy" value={form.policy} onChange={handleChange}>
-                                <option>Health Basic</option>
-                                <option>Motor Cover</option>
-                                <option>Property Shield</option>
-                                <option>Life Assurance</option>
-                            </select>
-                        </div>
-
-                        <div className="form__group">
-                            <label>Claim Amount ($) *</label>
-                            <input name="amount" value={form.amount} onChange={handleChange} placeholder="e.g. 500" type="number" />
-                            {errors.amount && <p style={{ color: "red", fontSize: "12px" }}>{errors.amount}</p>}
-                        </div>
-
-                        <div className="form__group">
-                            <label>Date *</label>
-                            <input name="date" value={form.date} onChange={handleChange} type="date" />
-                            {errors.date && <p style={{ color: "red", fontSize: "12px" }}>{errors.date}</p>}
-                        </div>
-
-                        <div className="form__group">
-                            <label>Reason *</label>
-                            <input name="reason" value={form.reason} onChange={handleChange} placeholder="e.g. Hospital admission" />
-                            {errors.reason && <p style={{ color: "red", fontSize: "12px" }}>{errors.reason}</p>}
-                        </div>
-
-                        <div className="popup__buttons">
-                            <button className="btn-cancel" onClick={() => setPopup(null)}>Cancel</button>
-                            <button className="btn-save" onClick={saveClaim}>Save Claim</button>
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            {/* VIEW CLAIM POPUP */}
-            {popup === "view" && selected && (
-                <div className="popup__overlay">
-                    <div className="popup__box">
-                        <h2 className="popup__title">👁 Claim Details</h2>
-
-                        <p className="details__item"><span>Client:</span> {selected.client}</p>
-                        <p className="details__item"><span>Policy:</span> {selected.policy}</p>
-                        <p className="details__item"><span>Amount:</span> {selected.amount}</p>
-                        <p className="details__item"><span>Date:</span> {selected.date}</p>
-                        <p className="details__item"><span>Reason:</span> {selected.reason}</p>
-                        <p className="details__item"><span>Status:</span> {selected.status}</p>
-
-                        <div className="popup__buttons">
-                            <button className="btn-cancel" onClick={() => setPopup(null)}>Close</button>
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            {/* DELETE CONFIRMATION POPUP */}
-            {popup === "delete" && selected && (
-                <div className="popup__overlay">
-                    <div className="popup__box">
-                        <h2 className="popup__title">🗑 Delete Claim</h2>
-                        <p>Are you sure you want to delete <strong>{selected.client}</strong>'s claim?</p>
-
-                        <div className="popup__buttons">
-                            <button className="btn-cancel" onClick={() => setPopup(null)}>Cancel</button>
-                            <button className="btn-confirm-delete" onClick={deleteClaim}>Yes, Delete</button>
-                        </div>
-                    </div>
-                </div>
-            )}
-
-        </div>
-    );
-}
+      <Dialog open={viewOpen} onClose={() => setViewOpen(false)} maxWidth="sm" fullWidth>
+        <DialogTitle>Claim Details</DialogTitle>
+        <DialogContent>
+          {selectedClaim && (
+            <Box sx={{ mt: 2 }}>
+              <Typography variant="h6">{selectedClaim.policyName}</Typography>
+              <Typography variant="body1"><strong>Client:</strong> {selectedClaim.clientName}</Typography>
+              <Typography variant="body1"><strong>Description:</strong> {selectedClaim.description}</Typography>
+              <Typography variant="body1"><strong>Amount:</strong> {selectedClaim.amount.toLocaleString()} RF</Typography>
+              <Typography variant="body1"><strong>Date:</strong> {selectedClaim.date}</Typography>
+              <Typography variant="body1"><strong>Status:</strong> <Chip label={selectedClaim.status} color={selectedClaim.status === 'approved' ? 'success' : selectedClaim.status === 'rejected' ? 'error' : 'warning'} size="small" /></Typography>
+            </Box>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setViewOpen(false)}>Close</Button>
+        </DialogActions>
+      </Dialog>
+    </Box>
+  );
+};
 
 export default Claims;

@@ -1,259 +1,282 @@
-import React, { useState } from "react";
-import "../styles/Policies.scss";
-import "../styles/Clients.scss";
+import { useState } from 'react';
+import { Box, Typography, Button, TextField, Dialog, DialogTitle, DialogContent, DialogActions, IconButton, Paper, Chip, Avatar, Divider, Grid, Tooltip } from '@mui/material';
+import { DataGrid } from '@mui/x-data-grid';
+import { Add, Delete, Visibility, Edit } from '@mui/icons-material';
+import { useApp } from '../context/AppContext';
 
-// Sample clients data
-const initialClients = [
-    { id: 1, name: "John Mugisha", email: "john@gmail.com", phone: "0781234567", nationalId: "1199012345678", policy: "Health Basic", status: "Active" },
-    { id: 2, name: "Alice Uwase", email: "alice@gmail.com", phone: "0722345678", nationalId: "1199512345678", policy: "Motor Cover", status: "Active" },
-    { id: 3, name: "Bob Nkurunziza", email: "bob@gmail.com", phone: "0733456789", nationalId: "1200012345678", policy: "Life Assurance", status: "Inactive" },
-    { id: 4, name: "Grace Mutoni", email: "grace@gmail.com", phone: "0744567890", nationalId: "1199812345678", policy: "Property Shield", status: "Pending" },
-];
+const Clients = () => {
+  const { clients, addClient, deleteClient, updateClient } = useApp();
+  const [open, setOpen] = useState(false);
+  const [viewOpen, setViewOpen] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
+  const [selectedClient, setSelectedClient] = useState(null);
+  const [deleteId, setDeleteId] = useState(null);
+  const [editId, setEditId] = useState(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [errors, setErrors] = useState({});
+  const [formData, setFormData] = useState({ name: '', email: '', phone: '', nationalId: '' });
 
-function Clients() {
+  const validateForm = () => {
+    const newErrors = {};
+    if (!formData.name.trim()) newErrors.name = 'Name is required';
+    if (!formData.email.trim()) {
+      newErrors.email = 'Email is required';
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      newErrors.email = 'Invalid email format';
+    }
+    if (!formData.phone.trim()) {
+      newErrors.phone = 'Phone is required';
+    } else if (!/^\d{10}$/.test(formData.phone)) {
+      newErrors.phone = 'Phone must be 10 digits';
+    }
+    if (!formData.nationalId.trim()) {
+      newErrors.nationalId = 'National ID is required';
+    } else if (!/^\d{16}$/.test(formData.nationalId)) {
+      newErrors.nationalId = 'National ID must be 16 digits';
+    }
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
-    // List of clients
-    const [clients, setClients] = useState(initialClients);
+  const handleSubmit = () => {
+    if (validateForm()) {
+      if (editId) {
+        updateClient(editId, formData);
+        setEditOpen(false);
+        setEditId(null);
+      } else {
+        addClient(formData);
+      }
+      handleClose();
+    }
+  };
 
-    // Controls which popup is open: null, "add", "view", "delete"
-    const [popup, setPopup] = useState(null);
+  const handleClose = () => {
+    setOpen(false);
+    setEditOpen(false);
+    setEditId(null);
+    setFormData({ name: '', email: '', phone: '', nationalId: '' });
+    setErrors({});
+  };
 
-    // Currently selected client
-    const [selected, setSelected] = useState(null);
-
-    // Search text
-    const [search, setSearch] = useState("");
-
-    // Form values for adding new client
-    const [form, setForm] = useState({
-        name: "", email: "", phone: "", nationalId: "", policy: "Health Basic", status: "Active"
+  const handleEdit = (client) => {
+    setEditId(client.id);
+    setFormData({
+      name: client.name,
+      email: client.email,
+      phone: client.phone,
+      nationalId: client.nationalId
     });
+    setEditOpen(true);
+  };
 
-    // Form errors
-    const [errors, setErrors] = useState({});
+  const columns = [
+    { 
+      field: 'id', 
+      headerName: 'ID', 
+      width: 80,
+      renderCell: (params) => (
+        <Chip label={`#${params.value}`} size="small" color="primary" variant="outlined" />
+      )
+    },
+    { 
+      field: 'name', 
+      headerName: 'Client Name', 
+      flex: 1,
+      renderCell: (params) => (
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <Avatar sx={{ width: 32, height: 32, fontSize: 14, bgcolor: 'primary.main' }}>
+            {params.value.split(' ').map(n => n[0]).join('').substring(0, 2)}
+          </Avatar>
+          <Typography variant="body2" fontWeight={500}>{params.value}</Typography>
+        </Box>
+      )
+    },
+    { field: 'email', headerName: 'Email', flex: 1 },
+    { field: 'phone', headerName: 'Phone', width: 130 },
+    { field: 'nationalId', headerName: 'National ID', width: 130 },
+    { field: 'createdAt', headerName: 'Registered', width: 120 },
+    { 
+      field: 'policies', 
+      headerName: 'Insurance Policies', 
+      width: 180,
+      renderCell: (params) => {
+        const clientPolicies = params.value || [];
+        if (clientPolicies.length === 0) {
+          return <Typography variant="body2" color="text.secondary">No policies</Typography>;
+        }
+        return (
+          <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
+            {clientPolicies.slice(0, 3).map((policy, idx) => (
+              <Tooltip key={idx} title={`${policy.policyName}`}>
+                <Chip label={policy.type} size="small" variant="outlined" />
+              </Tooltip>
+            ))}
+            {clientPolicies.length > 3 && <Chip label={`+${clientPolicies.length - 3}`} size="small" variant="outlined" />}
+          </Box>
+        );
+      }
+    },
+    {
+      field: 'actions', 
+      headerName: 'Actions', 
+      width: 200, 
+      renderCell: (params) => (
+        <Box className="action-buttons">
+          <IconButton size="small" onClick={() => { setSelectedClient(params.row); setViewOpen(true); }} title="View">
+            <Visibility />
+          </IconButton>
+          <IconButton size="small" color="primary" onClick={() => handleEdit(params.row)} title="Edit">
+            <Edit />
+          </IconButton>
+          <IconButton size="small" color="error" onClick={() => { setDeleteId(params.row.id); setDeleteOpen(true); }} title="Delete">
+            <Delete />
+          </IconButton>
+        </Box>
+      )
+    }
+  ];
 
-    // Open view popup
-    const openView = (client) => {
-        setSelected(client);
-        setPopup("view");
-    };
+  const filteredClients = clients.filter(c => 
+    c.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    c.email.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
-    // Open delete popup
-    const openDelete = (client) => {
-        setSelected(client);
-        setPopup("delete");
-    };
+  return (
+    <Box className="page-container">
+      <Typography variant="h4" className="page-title">Clients Management</Typography>
+      
+      <Box className="filter-bar">
+        <TextField label="Search clients..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} size="small" sx={{ minWidth: 250 }} />
+        <Button variant="contained" startIcon={<Add />} onClick={() => setOpen(true)}>Add Client</Button>
+      </Box>
 
-    // Delete selected client
-    const deleteClient = () => {
-        setClients(clients.filter((c) => c.id !== selected.id));
-        setPopup(null);
-    };
+      <Paper sx={{ height: 500, width: '100%' }}>
+        <DataGrid rows={filteredClients} columns={columns} pageSize={5} rowsPerPageOptions={[5, 10, 20]} checkboxSelection disableRowSelectionOnClick />
+      </Paper>
 
-    // Handle form input changes
-    const handleChange = (e) => {
-        setForm({ ...form, [e.target.name]: e.target.value });
-    };
+      <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
+        <DialogTitle>Add New Client</DialogTitle>
+        <DialogContent>
+          <Box className="form-container" sx={{ mt: 2 }}>
+            <TextField fullWidth label="Full Name" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} error={!!errors.name} helperText={errors.name} margin="dense" />
+            <TextField fullWidth label="Email" type="email" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} error={!!errors.email} helperText={errors.email} margin="dense" />
+            <TextField fullWidth label="Phone (10 digits)" value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value })} error={!!errors.phone} helperText={errors.phone} margin="dense" inputProps={{ maxLength: 10 }} />
+            <TextField fullWidth label="National ID (16 digits)" value={formData.nationalId} onChange={(e) => setFormData({ ...formData, nationalId: e.target.value })} error={!!errors.nationalId} helperText={errors.nationalId} margin="dense" inputProps={{ maxLength: 16 }} />
+          </Box>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleClose}>Cancel</Button>
+          <Button onClick={handleSubmit} variant="contained">Submit</Button>
+        </DialogActions>
+      </Dialog>
 
-    // Validate form before saving
-    const validate = () => {
-        let newErrors = {};
+      <Dialog open={viewOpen} onClose={() => setViewOpen(false)} maxWidth="sm" fullWidth>
+        <DialogTitle>Client Details</DialogTitle>
+        <DialogContent>
+          {selectedClient && (
+            <Box sx={{ mt: 2 }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
+                <Avatar sx={{ width: 64, height: 64, fontSize: 24, bgcolor: 'primary.main' }}>
+                  {selectedClient.name.split(' ').map(n => n[0]).join('').substring(0, 2)}
+                </Avatar>
+                <Box>
+                  <Typography variant="h5" fontWeight={600}>{selectedClient.name}</Typography>
+                  <Chip label={`ID: ${selectedClient.id}`} size="small" color="primary" variant="outlined" />
+                </Box>
+              </Box>
+              
+              <Divider sx={{ my: 2 }} />
+              
+              <Grid container spacing={2}>
+                <Grid item xs={12}>
+                  <Paper sx={{ p: 2, bgcolor: 'grey.50', borderRadius: 2 }}>
+                    <Typography variant="body2" color="text.secondary">Email Address</Typography>
+                    <Typography variant="body1" fontWeight={500}>{selectedClient.email}</Typography>
+                  </Paper>
+                </Grid>
+                
+                <Grid item xs={12} sm={6}>
+                  <Paper sx={{ p: 2, bgcolor: 'grey.50', borderRadius: 2 }}>
+                    <Typography variant="body2" color="text.secondary">Phone Number</Typography>
+                    <Typography variant="body1" fontWeight={500}>{selectedClient.phone}</Typography>
+                  </Paper>
+                </Grid>
+                
+                <Grid item xs={12} sm={6}>
+                  <Paper sx={{ p: 2, bgcolor: 'grey.50', borderRadius: 2 }}>
+                    <Typography variant="body2" color="text.secondary">National ID</Typography>
+                    <Typography variant="body1" fontWeight={500}>{selectedClient.nationalId}</Typography>
+                  </Paper>
+                </Grid>
+                
+                <Grid item xs={12}>
+                  <Paper sx={{ p: 2, bgcolor: 'grey.50', borderRadius: 2 }}>
+                    <Typography variant="body2" color="text.secondary">Registration Date</Typography>
+                    <Typography variant="body1" fontWeight={500}>{selectedClient.createdAt}</Typography>
+                  </Paper>
+                </Grid>
+                
+                <Grid item xs={12}>
+                  <Paper sx={{ p: 2, borderRadius: 2, border: '1px solid', borderColor: 'divider' }}>
+                    <Typography variant="subtitle2" fontWeight={600} gutterBottom>
+                      Insurance Policies Held
+                    </Typography>
+                    <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', mt: 1 }}>
+                      {(selectedClient.policies && selectedClient.policies.length > 0) ? (
+                        selectedClient.policies.map((policy, idx) => (
+                          <Box key={idx} sx={{ p: 1.5, borderRadius: 2, border: '1px solid', borderColor: 'divider', minWidth: 180 }}>
+                            <Typography variant="body2" fontWeight={600}>{policy.policyName}</Typography>
+                            <Box sx={{ display: 'flex', gap: 0.5, mt: 0.5 }}>
+                              <Chip label={policy.status} size="small" color={policy.status === 'active' ? 'success' : 'warning'} />
+                            </Box>
+                            <Typography variant="caption" color="text.secondary" display="block" sx={{ mt: 0.5 }}>
+                              Start: {policy.startDate} | End: {policy.endDate}
+                            </Typography>
+                          </Box>
+                        ))
+                      ) : (
+                        <Typography variant="body2" color="text.secondary">No policies assigned</Typography>
+                      )}
+                    </Box>
+                  </Paper>
+                </Grid>
+              </Grid>
+            </Box>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setViewOpen(false)}>Close</Button>
+        </DialogActions>
+      </Dialog>
 
-        // Name required
-        if (!form.name) newErrors.name = "Name is required";
+      <Dialog open={deleteOpen} onClose={() => setDeleteOpen(false)}>
+        <DialogTitle>Confirm Delete</DialogTitle>
+        <DialogContent>Are you sure you want to delete this client?</DialogContent>
+        <DialogActions>
+          <Button onClick={() => setDeleteOpen(false)}>Cancel</Button>
+          <Button color="error" onClick={() => { deleteClient(deleteId); setDeleteOpen(false); }}>Delete</Button>
+        </DialogActions>
+      </Dialog>
 
-        // Email must be valid
-        if (!form.email.includes("@")) newErrors.email = "Enter a valid email";
-
-        // Phone must be numbers only
-        if (!/^\d+$/.test(form.phone)) newErrors.phone = "Phone must be numbers only";
-
-        // National ID must be numbers only
-        if (!/^\d+$/.test(form.nationalId)) newErrors.nationalId = "National ID must be numbers only";
-
-        setErrors(newErrors);
-
-        // If no errors return true
-        return Object.keys(newErrors).length === 0;
-    };
-
-    // Save new client
-    const saveClient = () => {
-        if (!validate()) return;
-
-        const newClient = {
-            id: clients.length + 1,
-            ...form,
-        };
-        setClients([...clients, newClient]);
-        setPopup(null);
-        setForm({ name: "", email: "", phone: "", nationalId: "", policy: "Health Basic", status: "Active" });
-        setErrors({});
-    };
-
-    // Filter clients by search
-    const filtered = clients.filter((c) =>
-        c.name.toLowerCase().includes(search.toLowerCase())
-    );
-
-    return (
-        <div className="clients">
-
-            {/* Page header */}
-            <div className="clients__header">
-                <h1 className="clients__title">👥 Clients</h1>
-                <button className="btn-add" onClick={() => setPopup("add")}>
-                    + Add New Client
-                </button>
-            </div>
-
-            {/* Search bar */}
-            <input
-                className="search__bar"
-                type="text"
-                placeholder="🔍 Search clients..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-            />
-
-            {/* Clients Table */}
-            <div className="table-box">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>#</th>
-                            <th>Full Name</th>
-                            <th>Email</th>
-                            <th>Phone</th>
-                            <th>National ID</th>
-                            <th>Policy</th>
-                            <th>Status</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {filtered.map((client) => (
-                            <tr key={client.id}>
-                                <td>{client.id}</td>
-                                <td>{client.name}</td>
-                                <td>{client.email}</td>
-                                <td>{client.phone}</td>
-                                <td>{client.nationalId}</td>
-                                <td>{client.policy}</td>
-                                <td>
-                                    <span className={`badge badge--${client.status.toLowerCase()}`}>
-                                        {client.status}
-                                    </span>
-                                </td>
-                                <td>
-                                    <button className="btn-view" onClick={() => openView(client)}>
-                                        👁 View
-                                    </button>
-                                    <button className="btn-delete" onClick={() => openDelete(client)}>
-                                        🗑 Delete
-                                    </button>
-                                </td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
-            </div>
-
-            {/* ADD NEW CLIENT POPUP */}
-            {popup === "add" && (
-                <div className="popup__overlay">
-                    <div className="popup__box">
-                        <h2 className="popup__title">➕ Add New Client</h2>
-
-                        <div className="form__group">
-                            <label>Full Name *</label>
-                            <input name="name" value={form.name} onChange={handleChange} placeholder="e.g. John Mugisha" />
-                            {/* Show error if name is missing */}
-                            {errors.name && <p style={{ color: "red", fontSize: "12px" }}>{errors.name}</p>}
-                        </div>
-
-                        <div className="form__group">
-                            <label>Email *</label>
-                            <input name="email" value={form.email} onChange={handleChange} placeholder="e.g. john@gmail.com" />
-                            {errors.email && <p style={{ color: "red", fontSize: "12px" }}>{errors.email}</p>}
-                        </div>
-
-                        <div className="form__group">
-                            <label>Phone Number *</label>
-                            <input name="phone" value={form.phone} onChange={handleChange} placeholder="e.g. 0781234567" />
-                            {errors.phone && <p style={{ color: "red", fontSize: "12px" }}>{errors.phone}</p>}
-                        </div>
-
-                        <div className="form__group">
-                            <label>National ID *</label>
-                            <input name="nationalId" value={form.nationalId} onChange={handleChange} placeholder="e.g. 1199012345678" />
-                            {errors.nationalId && <p style={{ color: "red", fontSize: "12px" }}>{errors.nationalId}</p>}
-                        </div>
-
-                        <div className="form__group">
-                            <label>Policy</label>
-                            <select name="policy" value={form.policy} onChange={handleChange}>
-                                <option>Health Basic</option>
-                                <option>Motor Cover</option>
-                                <option>Property Shield</option>
-                                <option>Life Assurance</option>
-                            </select>
-                        </div>
-
-                        <div className="form__group">
-                            <label>Status</label>
-                            <select name="status" value={form.status} onChange={handleChange}>
-                                <option>Active</option>
-                                <option>Inactive</option>
-                                <option>Pending</option>
-                            </select>
-                        </div>
-
-                        <div className="popup__buttons">
-                            <button className="btn-cancel" onClick={() => setPopup(null)}>Cancel</button>
-                            <button className="btn-save" onClick={saveClient}>Save Client</button>
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            {/* VIEW CLIENT POPUP */}
-            {popup === "view" && selected && (
-                <div className="popup__overlay">
-                    <div className="popup__box">
-                        <h2 className="popup__title">👁 Client Details</h2>
-
-                        <p className="details__item"><span>Name:</span> {selected.name}</p>
-                        <p className="details__item"><span>Email:</span> {selected.email}</p>
-                        <p className="details__item"><span>Phone:</span> {selected.phone}</p>
-                        <p className="details__item"><span>National ID:</span> {selected.nationalId}</p>
-                        <p className="details__item"><span>Policy:</span> {selected.policy}</p>
-                        <p className="details__item"><span>Status:</span> {selected.status}</p>
-
-                        <div className="popup__buttons">
-                            <button className="btn-cancel" onClick={() => setPopup(null)}>Close</button>
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            {/* DELETE CONFIRMATION POPUP */}
-            {popup === "delete" && selected && (
-                <div className="popup__overlay">
-                    <div className="popup__box">
-                        <h2 className="popup__title">🗑 Delete Client</h2>
-                        <p>Are you sure you want to delete <strong>{selected.name}</strong>?</p>
-
-                        <div className="popup__buttons">
-                            <button className="btn-cancel" onClick={() => setPopup(null)}>Cancel</button>
-                            <button className="btn-confirm-delete" onClick={deleteClient}>Yes, Delete</button>
-                        </div>
-                    </div>
-                </div>
-            )}
-
-        </div>
-    );
-}
+      <Dialog open={editOpen} onClose={handleClose} maxWidth="sm" fullWidth>
+        <DialogTitle>Edit Client</DialogTitle>
+        <DialogContent>
+          <Box className="form-container" sx={{ mt: 2 }}>
+            <TextField fullWidth label="Full Name" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} error={!!errors.name} helperText={errors.name} margin="dense" />
+            <TextField fullWidth label="Email" type="email" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} error={!!errors.email} helperText={errors.email} margin="dense" />
+            <TextField fullWidth label="Phone (10 digits)" value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value })} error={!!errors.phone} helperText={errors.phone} margin="dense" inputProps={{ maxLength: 10 }} />
+            <TextField fullWidth label="National ID (16 digits)" value={formData.nationalId} onChange={(e) => setFormData({ ...formData, nationalId: e.target.value })} error={!!errors.nationalId} helperText={errors.nationalId} margin="dense" inputProps={{ maxLength: 16 }} />
+          </Box>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleClose}>Cancel</Button>
+          <Button onClick={handleSubmit} variant="contained">Save Changes</Button>
+        </DialogActions>
+      </Dialog>
+    </Box>
+  );
+};
 
 export default Clients;
