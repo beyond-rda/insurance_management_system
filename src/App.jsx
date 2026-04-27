@@ -16,6 +16,7 @@ import ClientHome from './pages/ClientHome';
 import ClientPolicies from './pages/ClientPolicies';
 import ClientClaims from './pages/ClientClaims';
 import ClientProfile from './pages/ClientProfile';
+import Hello from './pages/Hello';
 import { AppProvider } from './context/AppContext';
 
 const lightTheme = createTheme({
@@ -36,8 +37,10 @@ const darkTheme = createTheme({
   },
 });
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const ThemeContext = createContext();
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const useThemeContext = () => useContext(ThemeContext);
 
 const getRole = () => localStorage.getItem('role');
@@ -60,7 +63,8 @@ function App() {
         <AppProvider>
           <BrowserRouter>
             <Routes>
-              <Route path="/" element={<Login />} />
+              <Route path="/" element={<Hello />} />
+              <Route path="/login" element={<Login />} />
               <Route path="/register" element={<RegisterClient />} />
               
               <Route path="/admin" element={
@@ -78,17 +82,17 @@ function App() {
                 <Route index element={<Navigate to="dashboard" replace />} />
               </Route>
 
-               <Route path="/client" element={
-                 <PrivateRoute allowedRole="client">
-                   <ClientLayout />
-                 </PrivateRoute>
-               }>
-                 <Route path="home" element={<ClientHome />} />
-                 <Route path="policies" element={<ClientPolicies />} />
-                 <Route path="claims" element={<ClientClaims />} />
-                 <Route path="profile" element={<ClientProfile />} />
-                 <Route index element={<Navigate to="home" replace />} />
-               </Route>
+              <Route path="/client" element={
+                <PrivateRoute allowedRole="client">
+                  <ClientLayout />
+                </PrivateRoute>
+              }>
+                <Route path="home" element={<ClientHome />} />
+                <Route path="policies" element={<ClientPolicies />} />
+                <Route path="claims" element={<ClientClaims />} />
+                <Route path="profile" element={<ClientProfile />} />
+                <Route index element={<Navigate to="home" replace />} />
+              </Route>
             </Routes>
           </BrowserRouter>
         </AppProvider>

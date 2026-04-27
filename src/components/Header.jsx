@@ -2,8 +2,9 @@ import { AppBar, Toolbar, Typography, IconButton, Box, useTheme } from '@mui/mat
 import { Menu as MenuIcon, DarkMode, LightMode, Person } from '@mui/icons-material';
 import { useThemeContext } from '../App';
 import { useNavigate } from 'react-router-dom';
+import NotificationBell from './NotificationBell';
 
-const Header = ({ onMenuClick }) => {
+const Header = ({ onMenuClick, role = 'admin', clientEmail = '' }) => {
   const theme = useTheme();
   const { darkMode, setDarkMode } = useThemeContext();
   const navigate = useNavigate();
@@ -17,6 +18,7 @@ const Header = ({ onMenuClick }) => {
         <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1, cursor: 'pointer' }} onClick={() => navigate('/')}>
           Insurance Management System
         </Typography>
+        <NotificationBell role={role} clientEmail={clientEmail} />
         <IconButton color="inherit" onClick={() => setDarkMode(!darkMode)}>
           {darkMode ? <LightMode /> : <DarkMode />}
         </IconButton>

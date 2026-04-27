@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useContext, useState } from 'react';
 
 const AuthContext = createContext();
 
@@ -35,19 +35,21 @@ const initialPayments = [
 const initialApplications = [];
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const savedRole = localStorage.getItem('role');
+  const [user, setUser] = useState(() => {
     const savedUser = localStorage.getItem('user');
-    if (savedRole && savedUser) {
-      setUser(JSON.parse(savedUser));
+    if (savedUser) {
+      try {
+        return JSON.parse(savedUser);
+      } catch {
+        return null;
+      }
     }
-    setLoading(false);
-  }, []);
+    return null;
+  });
+  const loading = false;
 
   const login = (email, password, role) => {
+    void password;
     const normalizedEmail = email.trim().toLowerCase();
     const userData = { email: normalizedEmail, role };
     localStorage.setItem('role', role);
@@ -77,13 +79,14 @@ export const AuthProvider = ({ children }) => {
   );
 };
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const useAuth = () => useContext(AuthContext);
 
 export const AppProvider = ({ children }) => {
   const [policies, setPolicies] = useState(initialPolicies);
   const [clients, setClients] = useState(initialClients);
   const [claims, setClaims] = useState(initialClaims);
-  const [payments, setPayments] = useState(initialPayments);
+  const [payments] = useState(initialPayments);
   const [applications, setApplications] = useState(initialApplications);
 
   const addPolicy = (policy) => {
@@ -130,5 +133,5 @@ export const AppProvider = ({ children }) => {
 };
 
 const AppContext = createContext();
-
+// eslint-disable-next-line react-refresh/only-export-components
 export const useApp = () => useContext(AppContext);

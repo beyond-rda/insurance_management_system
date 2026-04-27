@@ -1,99 +1,268 @@
-.login__page {
-    min-height: 100vh;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    background-color: #1565c0;
+.login-wrapper {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 1rem;
+
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image:
+      radial-gradient(circle at 20% 80%, rgba(255,255,255,0.12) 0%, transparent 50%),
+      radial-gradient(circle at 80% 20%, rgba(255,255,255,0.12) 0%, transparent 50%);
+    animation: gradientPulse 8s ease-in-out infinite;
+  }
+
+  @keyframes gradientPulse {
+    0%, 100% { opacity: 0.6; }
+    50% { opacity: 1; }
+  }
 }
 
-.login__box {
-    background-color: white;
-    border-radius: 16px;
-    padding: 40px;
-    width: 400px;
-    max-width: 90%;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
-    text-align: center;
+.login-card {
+  position: relative;
+  z-index: 1;
+  backdrop-filter: blur(20px);
+  background: rgba(255, 255, 255, 0.95) !important;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 1.5rem !important;
+  animation: slideUp 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 60%);
+    opacity: 0;
+    transition: opacity 0.3s;
+    pointer-events: none;
+  }
+
+  &:hover::before {
+    opacity: 1;
+  }
 }
 
-.login__logo {
-    font-size: 48px;
-    margin-bottom: 8px;
+.login-logo-container {
+  animation: pulse 2s ease-in-out infinite;
 }
 
-.login__title {
-    font-size: 22px;
-    font-weight: bold;
-    color: #1565c0;
-    margin-bottom: 4px;
+.login-section-title {
+  font-weight: 600;
+  margin-bottom: 1.5rem;
+  color: #333;
 }
 
-.login__subtitle {
-    font-size: 13px;
-    color: #888;
-    margin-bottom: 28px;
-}
+.login-form-field {
+  margin-bottom: 1rem;
 
-.login__group {
-    margin-bottom: 16px;
-    text-align: left;
-}
-
-.login__group label {
-    display: block;
-    font-size: 13px;
-    color: #555;
-    margin-bottom: 6px;
-}
-
-.login__group input {
-    width: 100%;
-    padding: 12px;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    font-size: 14px;
-    box-sizing: border-box;
-
-    &:focus {
-        outline: none;
-        border-color: #1565c0;
-    }
-}
-
-.login__error {
-    color: red;
-    font-size: 12px;
-    margin-top: 4px;
-}
-
-.login__btn {
-    width: 100%;
-    padding: 12px;
-    background-color: #1565c0;
-    color: white;
-    border: none;
-    border-radius: 8px;
-    font-size: 16px;
-    cursor: pointer;
-    margin-top: 8px;
+  .MuiOutlinedInput-root {
+    border-radius: 1rem !important;
+    transition: all 0.2s ease;
 
     &:hover {
-        background-color: #0d47a1;
+      border-color: #667eea;
     }
+
+    &.Mui-focused {
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.15);
+    }
+  }
 }
 
-.login__hint {
-    margin-top: 20px;
-    font-size: 12px;
-    color: #aaa;
+.login-options {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 0.5rem 0 1.5rem;
 }
 
-.login__link {
-    color: #1565c0;
-    text-decoration: none;
-    font-weight: 600;
-    
+.login-submit-btn {
+  border-radius: 1rem !important;
+  font-weight: 600;
+  font-size: 1rem;
+  text-transform: none;
+  padding: 1rem 2rem !important;
+  position: relative;
+  overflow: hidden;
+
+  &::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    transition: width 0.6s, height 0.6s;
+  }
+
+  &:active::after {
+    width: 300px;
+    height: 300px;
+  }
+}
+
+.login-divider-text {
+  color: #999;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.login-secondary-btn {
+  border-radius: 1rem !important;
+  border-width: 2px !important;
+  text-transform: none;
+  font-weight: 600;
+  padding: 0.75rem 2rem;
+  transition: all 0.2s ease;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+  }
+}
+
+.login-hint-box {
+  margin-top: 1.5rem;
+  padding: 1rem;
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%);
+  border: 1px dashed;
+  border-image: linear-gradient(135deg, #667eea 0%, #764ba2 100%) 1;
+  border-radius: 0.75rem;
+
+  .MuiTypography-root {
+    font-size: 0.75rem;
+    line-height: 1.5;
+  }
+}
+
+// Register page specific styles
+.register-stepper {
+  margin-bottom: 2rem;
+  padding: 0 1rem;
+
+  .MuiStepLabel-label {
+    font-size: 0.875rem;
+    font-weight: 500;
+  }
+}
+
+.register-section-title {
+  font-weight: 600;
+  margin-bottom: 1.5rem;
+  color: #333;
+}
+
+.register-form-field {
+  margin-bottom: 0.5rem;
+
+  .MuiOutlinedInput-root {
+    border-radius: 1rem !important;
+    transition: all 0.2s ease;
+
     &:hover {
-        text-decoration: underline;
+      border-color: #667eea;
     }
+
+    &.Mui-focused {
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.15);
+    }
+  }
+}
+
+.register-review-grid {
+  .review-card {
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%);
+    border: 1px solid rgba(102, 126, 234, 0.1);
+    border-radius: 1rem;
+    transition: transform 0.2s, box-shadow 0.2s;
+
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15);
+    }
+
+    .review-label {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 0.5rem;
+    }
+  }
+}
+
+.register-terms {
+  margin: 1.5rem 0;
+
+  .MuiFormControlLabel-label {
+    font-size: 0.875rem;
+    line-height: 1.5;
+  }
+}
+
+.register-navigation {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 2rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid #eee;
+}
+
+// Animations
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-5px); }
+  75% { transform: translateX(5px); }
+}
+
+// Responsive
+@media (max-width: 600px) {
+  .login-wrapper,
+  .register-wrapper {
+    padding: 0.5rem;
+  }
+
+  .login-card,
+  .register-card {
+    border-radius: 1.5rem !important;
+    padding: 1.5rem !important;
+  }
+
+  .login-stepper,
+  .register-stepper {
+    .MuiStepLabel-label {
+      font-size: 0.75rem;
+    }
+  }
 }

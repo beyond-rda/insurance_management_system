@@ -4,6 +4,7 @@ import { Menu as MenuIcon, Dashboard, Policy, People, Assignment, Payment, Asses
 import { useNavigate, useLocation, Outlet } from 'react-router-dom';
 import { useThemeContext } from '../App';
 import Footer from '../components/Footer';
+import NotificationBell from '../components/NotificationBell';
 
 const drawerWidth = 240;
 
@@ -102,6 +103,7 @@ const AdminLayout = () => {
           <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
             Rwanda Insurance - Admin
           </Typography>
+          <NotificationBell role="admin" />
           <IconButton
             onClick={handleAvatarClick}
             sx={{ p: 0, mr: 1 }}

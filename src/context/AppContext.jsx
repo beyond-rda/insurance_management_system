@@ -417,6 +417,7 @@ export const AppProvider = ({ children }) => {
   const [claims, setClaims] = useState(initialClaims);
   const [payments, setPayments] = useState(initialPayments);
   const [applications, setApplications] = useState(initialApplications);
+  const [notifications, setNotifications] = useState([]);
 
   // Initialize localStorage on first load
   if (!localStorage.getItem('insurance_clients')) {
@@ -488,10 +489,14 @@ export const AppProvider = ({ children }) => {
   };
 
   const addApplication = (application) => {
-    setApplications([
-      ...applications,
-      { ...application, id: generateId(), status: 'pending', date: new Date().toISOString().split('T')[0] },
-    ]);
+    const newApp = { ...application, id: generateId(), status: 'pending', date: new Date().toISOString().split('T')[0] };
+    setApplications([...applications, newApp]);
+    addNotification({
+      type: 'application',
+      title: 'New Insurance Application',
+      message: `${application.name} applied for ${application.policyName}`,
+      role: 'admin',
+    });
   };
 
   const addPayment = (payment) => {
@@ -571,15 +576,34 @@ export const AppProvider = ({ children }) => {
           ];
       setClients(updatedClients);
       localStorage.setItem('insurance_clients', JSON.stringify(updatedClients));
+
+      // Notify client about approval
+      addNotification({
+        type: 'application_approved',
+        title: 'Application Approved',
+        message: `Your ${app.policyName} application has been approved!`,
+        role: 'client',
+        clientEmail: app.email,
+      });
     }
   };
 
   const rejectApplication = (applicationId) => {
+    const app = applications.find((a) => a.id === applicationId);
     setApplications(
       applications.map((application) =>
         application.id === applicationId ? { ...application, status: 'rejected' } : application
       )
     );
+    if (app) {
+      addNotification({
+        type: 'application_rejected',
+        title: 'Application Rejected',
+        message: `Your ${app.policyName} application has been rejected`,
+        role: 'client',
+        clientEmail: app.email,
+      });
+    }
   };
 
   const getHouseholdMembersByNationalId = (nationalId) => {
@@ -587,6 +611,26 @@ export const AppProvider = ({ children }) => {
       return [];
     }
     return getHouseholdMembersByNationalIdValue(nationalId, clients);
+  };
+
+  const addNotification = (notification) => {
+    const newNotification = {
+      id: generateId(),
+      timestamp: new Date().toISOString(),
+      read: false,
+      ...notification,
+    };
+    setNotifications((prev) => [newNotification, ...prev]);
+  };
+
+  const markNotificationRead = (notificationId) => {
+    setNotifications((prev) =>
+      prev.map((n) => (n.id === notificationId ? { ...n, read: true } : n))
+    );
+  };
+
+  const clearNotifications = () => {
+    setNotifications([]);
   };
 
   return (
@@ -611,6 +655,10 @@ export const AppProvider = ({ children }) => {
         approveApplication,
         rejectApplication,
         getHouseholdMembersByNationalId,
+        notifications,
+        addNotification,
+        markNotificationRead,
+        clearNotifications,
       }}
     >
       {children}
@@ -618,4 +666,5 @@ export const AppProvider = ({ children }) => {
   );
 };
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const useApp = () => useContext(AppContext);

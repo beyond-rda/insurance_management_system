@@ -1,15 +1,8 @@
 import { useState } from 'react';
 import { Box, Typography, Button, TextField, Dialog, DialogTitle, DialogContent, DialogActions, FormControl, InputLabel, Select, MenuItem, IconButton, Paper } from '@mui/material';
 import { DataGrid } from '@mui/x-data-grid';
-import { Add, Delete, Visibility, CloudUpload, Edit, HealthAndSafety, DirectionsCar, HomeWork, MedicalServices } from '@mui/icons-material';
+import { Add, Delete, Visibility, CloudUpload, Edit } from '@mui/icons-material';
 import { useApp } from '../context/AppContext';
-
-const typeConfig = {
-  health: { icon: <HealthAndSafety />, bg: '#e3f2fd', text: '#1565c0', label: 'Health' },
-  auto: { icon: <DirectionsCar />, bg: '#fff3e0', text: '#e65100', label: 'Auto' },
-  home: { icon: <HomeWork />, bg: '#f3e5f5', text: '#7b1fa2', label: 'Home' },
-  mutuelle: { icon: <MedicalServices />, bg: '#e8f5e9', text: '#2e7d32', label: 'Mutuelle' }
-};
 
 const Policies = () => {
   const { policies, addPolicy, deletePolicy, updatePolicy } = useApp();

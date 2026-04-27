@@ -65,7 +65,7 @@ const ClientClaims = () => {
     return colors[status] || 'default';
   };
 
-  const filteredClaims = claims.filter(c => 
+  const filteredClaims = claims.filter(c =>
     c.policyName.toLowerCase().includes(searchTerm.toLowerCase()) ||
     c.description.toLowerCase().includes(searchTerm.toLowerCase())
   );
@@ -80,12 +80,12 @@ const ClientClaims = () => {
       </Box>
 
       <Box sx={{ mb: 3 }}>
-        <TextField 
-          label="Search claims..." 
-          value={searchTerm} 
-          onChange={(e) => setSearchTerm(e.target.value)} 
-          size="small" 
-          sx={{ minWidth: 250 }} 
+        <TextField
+          label="Search claims..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          size="small"
+          sx={{ minWidth: 100, borderRadius: 2 }}
         />
       </Box>
 
@@ -135,9 +135,9 @@ const ClientClaims = () => {
           <Box sx={{ mt: 2 }}>
             <FormControl fullWidth margin="dense" error={!!errors.policyId}>
               <InputLabel>Select Policy</InputLabel>
-              <Select 
-                value={formData.policyId} 
-                onChange={(e) => setFormData({ ...formData, policyId: e.target.value })} 
+              <Select
+                value={formData.policyId}
+                onChange={(e) => setFormData({ ...formData, policyId: e.target.value })}
                 label="Select Policy"
               >
                 {policies.map(p => (
@@ -145,26 +145,26 @@ const ClientClaims = () => {
                 ))}
               </Select>
             </FormControl>
-            <TextField 
-              fullWidth 
-              label="Description" 
-              multiline 
-              rows={3} 
-              value={formData.description} 
-              onChange={(e) => setFormData({ ...formData, description: e.target.value })} 
-              error={!!errors.description} 
-              helperText={errors.description} 
-              margin="dense" 
+            <TextField
+              fullWidth
+              label="Description"
+              multiline
+              rows={3}
+              value={formData.description}
+              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+              error={!!errors.description}
+              helperText={errors.description}
+              margin="dense"
             />
-            <TextField 
-              fullWidth 
-              label="Claim Amount ($)" 
-              type="number" 
-              value={formData.amount} 
-              onChange={(e) => setFormData({ ...formData, amount: e.target.value })} 
-              error={!!errors.amount} 
-              helperText={errors.amount} 
-              margin="dense" 
+            <TextField
+              fullWidth
+              label="Claim Amount ($)"
+              type="number"
+              value={formData.amount}
+              onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
+              error={!!errors.amount}
+              helperText={errors.amount}
+              margin="dense"
             />
             <Box sx={{ mt: 2 }}>
               <Typography variant="body2" gutterBottom>Upload Supporting Documents (PDF/Image, max 5MB)</Typography>

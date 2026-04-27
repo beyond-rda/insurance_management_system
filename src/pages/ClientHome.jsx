@@ -4,7 +4,7 @@ import { useApp } from '../context/AppContext';
 import { useNavigate } from 'react-router-dom';
 
 const ClientHome = () => {
-  const { policies, applications, claims, clients } = useApp();
+  const { policies, applications, clients } = useApp();
   const navigate = useNavigate();
 
   const userEmail = JSON.parse(localStorage.getItem('user') || '{}').email;
@@ -12,7 +12,6 @@ const ClientHome = () => {
   const clientPolicies = currentClient?.policies || [];
   const myApplications = applications.filter(app => app.email === userEmail);
   const pendingPurchases = myApplications.filter(app => app.status === 'pending').length;
-  const pendingClaims = claims.filter(c => c.status === 'pending').length;
 
   return (
     <Box>

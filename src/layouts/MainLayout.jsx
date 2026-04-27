@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Box, Toolbar, useTheme, useMediaQuery } from '@mui/material';
+import { Box, Toolbar, useTheme } from '@mui/material';
 import { Outlet } from 'react-router-dom';
 import Header from '../components/Header';
 import Sidebar from '../components/Sidebar';
@@ -10,7 +10,6 @@ const drawerWidth = 240;
 const MainLayout = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
 
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);

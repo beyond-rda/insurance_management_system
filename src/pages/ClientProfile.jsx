@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Box, Paper, Typography, TextField, Button, Avatar, Grid, Alert, Divider, FormControlLabel, Checkbox, Switch } from '@mui/material';
 import { Person, Email, Phone, Badge, CalendarToday, Save } from '@mui/icons-material';
 import { useApp } from '../context/AppContext';
@@ -11,27 +11,17 @@ const ClientProfile = () => {
   const userEmail = userData?.email?.trim().toLowerCase();
   const currentClient = clients.find(c => c.email?.trim().toLowerCase() === userEmail);
 
-  const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    phone: '',
-    nationalId: '',
-    canRequestInsurance: true
+  const getInitialFormData = () => ({
+    name: currentClient?.name || '',
+    email: currentClient?.email || '',
+    phone: currentClient?.phone || '',
+    nationalId: currentClient?.nationalId || '',
+    canRequestInsurance: currentClient?.canRequestInsurance ?? true
   });
+
+  const [formData, setFormData] = useState(getInitialFormData);
   const [errors, setErrors] = useState({});
   const [success, setSuccess] = useState(false);
-
-  useEffect(() => {
-    if (currentClient) {
-      setFormData({
-        name: currentClient.name || '',
-        email: currentClient.email || '',
-        phone: currentClient.phone || '',
-        nationalId: currentClient.nationalId || '',
-        canRequestInsurance: currentClient.canRequestInsurance ?? true
-      });
-    }
-  }, [currentClient]);
 
   const validateForm = () => {
     const newErrors = {};

@@ -4,6 +4,7 @@ import { DarkMode, LightMode, Logout, Person, Email, Phone, Badge, CalendarToday
 import { useNavigate, useLocation, Outlet } from 'react-router-dom';
 import { useThemeContext } from '../App';
 import Footer from '../components/Footer';
+import NotificationBell from '../components/NotificationBell';
 
 const ClientLayout = () => {
   const theme = useTheme();
@@ -55,6 +56,7 @@ const ClientLayout = () => {
           <Typography variant="h6" sx={{ flexGrow: 1 }}>
             Rwanda Insurance - Client Portal
           </Typography>
+          <NotificationBell role="client" clientEmail={userEmail} />
           <IconButton
             onClick={handleAvatarClick}
             sx={{ p: 0 }}

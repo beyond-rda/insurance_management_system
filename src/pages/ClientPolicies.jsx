@@ -57,10 +57,11 @@ const emptyForm = {
   mutuelleNationalId: '',
   householdMembers: [],
   startDate: '',
+  type: '',
 };
 
 const ClientPolicies = () => {
-  const { policies, clients, addApplication, getHouseholdMembersByNationalId } = useApp();
+  const { policies, clients, addApplication, addPayment, payments, getHouseholdMembersByNationalId } = useApp();
   const [searchTerm, setSearchTerm] = useState('');
   const [typeFilter, setTypeFilter] = useState('');
   const [viewOpen, setViewOpen] = useState(false);
@@ -69,9 +70,20 @@ const ClientPolicies = () => {
   const [errors, setErrors] = useState({});
   const [formData, setFormData] = useState(emptyForm);
   const [successMessage, setSuccessMessage] = useState('');
+  const [paymentSuccess, setPaymentSuccess] = useState('');
 
   const currentUser = useMemo(() => JSON.parse(localStorage.getItem('user') || '{}'), []);
   const currentClient = clients.find((client) => client.email === currentUser.email);
+  const displayName = currentClient?.name || currentUser.name || '';
+
+  const isPolicyPaid = (policy) => {
+    if (!currentClient) return false;
+    return payments.some(p =>
+      p.clientName === currentClient.name &&
+      p.policyName === policy.policyName &&
+      p.date === policy.startDate
+    );
+  };
 
   const calculatePremium = () => {
     if (!selectedPolicy) return 0;
@@ -103,8 +115,11 @@ const ClientPolicies = () => {
   const validateForm = () => {
     const newErrors = {};
 
-    if (!currentClient?.name && !currentUser.email) newErrors.profileName = 'Client profile name is missing';
+    if (!displayName && !currentUser.email) newErrors.profileName = 'Client profile name is missing';
     if (!formData.startDate) newErrors.startDate = 'Start date is required';
+    else if (new Date(formData.startDate) < new Date(new Date().toISOString().split('T')[0])) {
+      newErrors.startDate = 'Start date cannot be in the past';
+    }
 
     if (selectedPolicy?.type === 'health') {
       if (!formData.planType) newErrors.planType = 'Plan type is required';
@@ -140,11 +155,23 @@ const ClientPolicies = () => {
     return Object.keys(newErrors).length === 0;
   };
 
+  const handlePayPolicy = (policy) => {
+    if (!currentClient) return;
+    addPayment({
+      clientName: currentClient.name,
+      policyName: policy.policyName,
+      amount: policies.find(p => p.id === policy.policyId)?.premium || 0,
+      date: new Date().toISOString().split('T')[0],
+      status: 'completed',
+    });
+    setPaymentSuccess(`Payment for ${policy.policyName} completed successfully!`);
+  };
+
   const handleApply = () => {
     if (!validateForm()) return;
 
     addApplication({
-      name: currentClient?.name || currentUser.email || '',
+      name: displayName,
       email: currentClient?.email || currentUser.email || '',
       phone: currentClient?.phone || '',
       nationalId: formData.mutuelleNationalId || formData.homeNationalId || currentClient?.nationalId || '',
@@ -164,6 +191,7 @@ const ClientPolicies = () => {
       householdMembers: formData.householdMembers,
       householdSize: formData.householdMembers.length,
       startDate: formData.startDate,
+      type: selectedPolicy?.type,
     });
 
     setApplyOpen(false);
@@ -177,6 +205,7 @@ const ClientPolicies = () => {
     setFormData({
       ...emptyForm,
       homeNationalId: currentClient?.nationalId || '',
+      type: policy?.type || '',
     });
     setErrors({});
     setApplyOpen(true);
@@ -202,6 +231,12 @@ const ClientPolicies = () => {
       {successMessage && (
         <Alert severity="success" sx={{ mb: 3 }} onClose={() => setSuccessMessage('')}>
           {successMessage}
+        </Alert>
+      )}
+
+      {paymentSuccess && (
+        <Alert severity="success" sx={{ mb: 3 }} onClose={() => setPaymentSuccess('')}>
+          {paymentSuccess}
         </Alert>
       )}
 
@@ -328,6 +363,109 @@ const ClientPolicies = () => {
         })}
       </Grid>
 
+      {currentClient?.policies?.length > 0 && (
+        <Box sx={{ mt: 6 }}>
+          <Typography variant="h4" gutterBottom sx={{ fontWeight: 600, mb: 3 }}>
+            My Policies
+          </Typography>
+          <Grid container spacing={3}>
+            {currentClient.policies.map((policy) => {
+              const config = typeConfig[policy.type] || typeConfig.health;
+              const matchedPolicy = policies.find(p => p.id === policy.policyId);
+              return (
+                <Grid item xs={12} sm={6} md={4} key={`${policy.policyId}-${policy.startDate}`}>
+                  <Card sx={{
+                    height: '100%',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    borderRadius: 3,
+                    transition: 'all 0.3s ease',
+                    '&:hover': {
+                      transform: 'translateY(-8px)',
+                      boxShadow: '0 12px 24px rgba(0,0,0,0.15)',
+                    },
+                  }}>
+                    <Box sx={{
+                      background: `linear-gradient(135deg, ${config.bg} 0%, ${config.bg}dd 100%)`,
+                      p: 2,
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 1.5,
+                    }}>
+                      <Box sx={{
+                        p: 1,
+                        borderRadius: 2,
+                        backgroundColor: 'rgba(255,255,255,0.5)',
+                        display: 'flex',
+                        color: config.text,
+                      }}>
+                        {config.icon}
+                      </Box>
+                      <Chip
+                        label={config.label}
+                        size="small"
+                        sx={{ backgroundColor: 'rgba(255,255,255,0.7)', color: config.text, fontWeight: 600 }}
+                      />
+                    </Box>
+                    <CardContent sx={{ flexGrow: 1 }}>
+                      <Typography variant="h6" gutterBottom sx={{ fontWeight: 600 }}>
+                        {policy.policyName}
+                      </Typography>
+                      <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2, p: 2, bgcolor: 'background.default', borderRadius: 2, mb: 2 }}>
+                        <Box>
+                          <Typography variant="caption" color="text.secondary">
+                            Start Date
+                          </Typography>
+                          <Typography variant="body2" fontWeight="bold">
+                            {policy.startDate}
+                          </Typography>
+                        </Box>
+                        <Box>
+                          <Typography variant="caption" color="text.secondary">
+                            End Date
+                          </Typography>
+                          <Typography variant="body2" fontWeight="bold">
+                            {policy.endDate}
+                          </Typography>
+                        </Box>
+                        <Box>
+                          <Typography variant="caption" color="text.secondary">
+                            Status
+                          </Typography>
+                          <Chip label={policy.status} size="small" color="success" sx={{ mt: 0.5 }} />
+                        </Box>
+                        <Box>
+                          <Typography variant="caption" color="text.secondary">
+                            Premium
+                          </Typography>
+                          <Typography variant="body2" fontWeight="bold">
+                            {matchedPolicy?.premium?.toLocaleString() || 0} RF
+                          </Typography>
+                        </Box>
+                      </Box>
+                    </CardContent>
+                    <CardActions sx={{ px: 2, pb: 2 }}>
+                      {isPolicyPaid(policy) ? (
+                        <Chip label="Paid" color="success" sx={{ mx: 'auto' }} />
+                      ) : (
+                        <Button
+                          fullWidth
+                          variant="contained"
+                          onClick={() => handlePayPolicy(policy)}
+                          sx={{ borderRadius: 2 }}
+                        >
+                          Pay Now ({matchedPolicy?.premium?.toLocaleString() || 0} RF)
+                        </Button>
+                      )}
+                    </CardActions>
+                  </Card>
+                </Grid>
+              );
+            })}
+          </Grid>
+        </Box>
+      )}
+
       <Dialog open={viewOpen} onClose={() => setViewOpen(false)} maxWidth="sm" fullWidth>
         <DialogTitle sx={{ fontWeight: 600 }}>Policy Details</DialogTitle>
         <DialogContent>
@@ -421,7 +559,7 @@ const ClientPolicies = () => {
             <TextField
               fullWidth
               label="Full Name"
-              value={currentClient?.name || ''}
+              value={displayName}
               margin="dense"
               InputProps={{ readOnly: true }}
               error={!!errors.profileName}
@@ -570,6 +708,7 @@ const ClientPolicies = () => {
               helperText={errors.startDate}
               margin="dense"
               InputLabelProps={{ shrink: true }}
+              inputProps={{ min: new Date().toISOString().split('T')[0] }}
             />
           </Box>
         </DialogContent>

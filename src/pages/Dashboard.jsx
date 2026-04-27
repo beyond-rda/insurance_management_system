@@ -17,7 +17,6 @@ const StatCard = ({ icon, value, label, color }) => (
 const Dashboard = () => {
   const { policies, clients, claims, payments, applications } = useApp();
 
-  const totalPremium = policies.reduce((sum, p) => sum + p.premium, 0);
   const pendingClaims = claims.filter(c => c.status === 'pending').length;
   const approvedClaims = claims.filter(c => c.status === 'approved').length;
   const totalPayments = payments.filter(p => p.status === 'completed').reduce((sum, p) => sum + p.amount, 0);
