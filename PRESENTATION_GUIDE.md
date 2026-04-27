@@ -1,4 +1,4 @@
-# Presentation Guide
+
 
 ## 1. Project Introduction
 
@@ -7,8 +7,6 @@ Say:
 "This project is an Insurance Management System built with React, SCSS, MUI, React Router, and Recharts. It digitalizes policy registration, client management, claims processing, payments, and analytics."
 
 ## 2. Technologies Used
-
-Say:
 
 "I used React for component-based architecture, SCSS for styling, MUI for modern UI components, MUI DataGrid for advanced tables, React Router for page navigation, and Recharts for analytics dashboards."
 
@@ -70,7 +68,5 @@ Say:
 - Dark/Light mode is controlled globally using `ThemeProvider`.
 
 ## 6. Short Closing
-
-Say:
 
 "In summary, this system provides a complete insurance workflow from registration to reporting, with responsive design, validation, analytics, and role-based navigation."
